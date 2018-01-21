@@ -1,0 +1,12 @@
+#!/bin/bash
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+if [ ".$1" != ".noremove" ]; then
+	rm /var/lib/logcheck/*.log
+fi
+
+sudo -u logcheck logcheck

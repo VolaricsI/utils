@@ -1,0 +1,82 @@
+#!/bin/bash
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+DIR=/usr/src/linux
+
+MAKE_PARAM=" -j 4 "		#Több szálu forditas
+
+CONF_SOR=CONFIG_LOCALVERSION=
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+InitRD(){
+	Version=`readlink ${DIR}|sed 's/^.*-//g;'`\
+`cat ${DIR}/.config|grep "${CONF_SOR}"|sed "s/$CONF_SOR//g; s/\"//g; "`
+
+	echo "Aktuális verziószám: ${Version}"
+	/usr/sbin/update-initramfs -c -k "${Version}"
+
+	if [ ".$?" != ".0" ]; then
+		/usr/sbin/update-initramfs -u -k "${Version}"
+	fi
+}
+
+#:::::::: Start :::::::::::::::
+	cd "${DIR}"
+	if [ "$?" != "0" ]; then exit 1; fi
+
+	if [ ".$1" == "." ]; then 
+		echo "Usage: $0 {Menu|Torles|Kernel|kernel Install|MODul|Modul Install|INITramfs|Full deb}";
+		exit 2
+	fi
+
+case "$1" in
+      m)	echo "Menu config...";
+	    make menuconfig;
+	    ;;
+
+      t)	echo "Torles...  "; 
+	    make dep;			if [ "$?" != "0" ]; then exit 1; fi
+	    make clean;			if [ "$?" != "0" ]; then exit 1; fi
+	    make mrproper;		if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      k)	echo "Kernel forditas..."
+	    make ${MAKE_PARAM} bzImage;		if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      i)	echo "Csak kernel install..."
+	    make install;		if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      init)
+	    InitRD
+	    ;;
+
+      mod)	echo "Modul forditas..."
+	    make ${MAKE_PARAM} modules;		if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      mi)	echo "Modules Install..."
+	    make modules_install;	if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      deb)	echo "Debian csomag készitése..."
+	    make ${MAKE_PARAM} KDEB_PKGVERSION=1 deb-pkg;	if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      f)	echo "Minden..."
+	    $0 k;			if [ "$?" != "0" ]; then exit 1; fi
+	    $0 mod;			if [ "$?" != "0" ]; then exit 1; fi
+	    $0 mi;			if [ "$?" != "0" ]; then exit 1; fi
+	    $0 init;			if [ "$?" != "0" ]; then exit 1; fi
+	    $0 i;			if [ "$?" != "0" ]; then exit 1; fi
+	    ;;
+
+      *)
+	    echo "Hibás paraméter: /$1-";	exit 1;
+esac
+    echo "Sikeres..."
+
+    shift;
+    if [ ".$*" != "." ]; then	$0 $*;	fi

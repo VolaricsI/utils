@@ -1,0 +1,11 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+systemctl stop clamav-freshclam.service
+rm -f /var/lib/clamav/*
+freshclam -v
+systemctl restart clamav-freshclam.service

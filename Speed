@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+#	Create by Voli
+
+#:::::: Fix beallitasok :::::::
+GOVERNORS='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_available_governors'
+GOVERNOR='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_governor'
+CUR_FREQ='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_cur_freq'
+KONVERT='s/[0-9]\{3\}$//g; s/\([0-9]\+\)\([0-9]\{3\}$\)/\1\.\2/g; '			#KHz-ből MHz és tizedes pont is bekerül
+#:::::: Beallitasok :::::::::::
+CPU_FREQ_MIN=$( cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq |sed "${KONVERT}")
+CPU_FREQ_MAX=$( cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq |sed "${KONVERT}")
+
+#:::::: Ellenorzesek ::::::::::
+#:::::: functions :::::::::::::
+#:::::: Start :::::::::::::::::
+    if [ -n "$1" ]; then
+	echo Meg probalom beaalitani az uj managementet: $1....
+	for x in ${GOVERNOR}; do
+		echo "$1" >>$x
+	done
+    fi
+
+    echo "CPU frekvencia, min: ${CPU_FREQ_MIN} Mhz; max: ${CPU_FREQ_MAX} MHz."
+    echo -n "Lehetseges CPU frekvencia management: "; cat ${GOVERNORS}	|sort -u
+    echo -n "Aktualis   CPU frekvencia management: "; cat ${GOVERNOR}	|sort -u
+
+    cnt=0
+    while true; do
+	echo -n "${cnt}:	"
+	S=$( cat ${CUR_FREQ} |sed "${KONVERT} s/${CPU_FREQ_MIN}/.../g; s/\(^.\{3\}$\)/..\1/g " )
+	echo ${S}
+
+	cnt=$[${cnt}+1]; sleep 1
+    done

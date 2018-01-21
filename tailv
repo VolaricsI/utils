@@ -1,0 +1,8 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+tail -f /var/log/syslog

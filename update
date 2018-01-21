@@ -1,0 +1,4 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+sudo apt update && sudo apt upgrade $1 && sudo apt clean && sudo apt autoremove
