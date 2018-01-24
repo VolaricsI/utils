@@ -1,0 +1,23 @@
+#!/bin/sh
+#	Created by Volarics Istvan (Voli)
+
+#:::::: Fix beallitasok :::::::
+CEL=/usr/local/bin
+FORRAS=/home/mynet/usr_local_bin
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+
+Set(){
+	while [ ".$1" != "." ]; do
+	echo Set ${CEL}: $1
+		[ -L ${CEL}/$1 ] && rm ${CEL}/$1
+
+		[   -e ${CEL}/$1 ] && echo "Létezik a file: ${CEL}/$1"
+		[ ! -e ${CEL}/$1 ] && ln -s ${FORRAS}/$1 ${CEL}/$1
+	    shift
+	done
+}
+
+#:::::::: Start :::::::::::::::
+    Set dfv dpkgl lcv psv psxv Speed swap tailv tarx update ver sshc ssht
+
