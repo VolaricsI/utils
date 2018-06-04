@@ -1,0 +1,41 @@
+#!/bin/bash
+#	Created by Voli & Emre volaricsi@gmail.com
+#	Rendszermasolo
+
+SYS_SOURCE=sda2
+SYS_IDE=sdb2
+SOURCE="/mnt/$SYS_SOURCE"
+HOVA="/mnt/$SYS_IDE"
+
+#A file-ban ($1) átír mindent $SYS_SOURCE --> $SYS_IDE
+Atiras()
+{
+mv ${HOVA}$1 ${HOVA}$1.${SYS_SOURCE}			1>&2	2>/dev/null
+cat ${HOVA}$1.${SYS_SOURCE}|sed "s/$SYS_SOURCE/$SYS_IDE/g"	>${HOVA}$1
+}
+
+
+#Csatolási pont létrehozása
+if [ ! -r "${HOVA}" ];		then	mkdir "${HOVA}";	fi
+if [ ! -r "${SOURCE}" ];	then	mkdir "${SOURCE}";	fi
+
+#felcsatolások, a forrás elég ha csak olvasható
+mount		/dev/${SYS_IDE} ${HOVA}		#	1>&2	2>/dev/null
+mount		/dev/${SYS_SOURCE} ${SOURCE}	#	1>&2	2>/dev/null
+
+#Másolás rsync-el
+
+#rsync -avulHAXt --delete ${SOURCE}/ ${HOVA}/	|tee -a ${HOVA}/syscp$$
+rsync -avulHAXt  ${SOURCE}/ ${HOVA}/	|tee -a ${HOVA}/syscp$$
+
+blkid		|tee -a ${HOVA}/syscp$$
+
+echo `date`: Vege. >>${HOVA}/syscp$$
+
+
+#File-ban atirasok, hogy jó legyen....
+umount ${SOURCE}
+umount ${HOVA}
+echo Vege. press key....
+echo `date`: Vege. press key.... >>${HOVA}/syscp$$
+read

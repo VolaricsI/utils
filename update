@@ -1,4 +1,4 @@
 #!/bin/sh
 #	Created by Volarics Istvan by Voli
 
-sudo apt update && sudo apt upgrade && sudo apt autoremove && sudo apt clean
+sudo apt update && sudo apt upgrade && sudo apt autoremove --purge && sudo apt clean

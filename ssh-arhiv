@@ -1,0 +1,9 @@
+#!/bin/sh
+#	Created by Volarics Istvan (Voli)
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+ip=$( grep -e "address" /etc/munin/munin-conf.d/arhiv.conf |sed 's/.*address *//g;' )
+ssh -X root@$ip
