@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+#	Create by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Ellenorzesek ::::::::::
+#:::::: functions :::::::::::::
+#:::::: Start :::::::::::::::::
+
+[ "." != ".$1" ] &&	rkhunter --check --update --versioncheck --sk --propupd
+
+			rkhunter --check --update --versioncheck --sk --rwo
+
+exit 0
+
+http://serverfault.com/questions/759555/rkhunter-deleted-files-whitelist-issues
+
+csak ennyi és nincs filera nézé (pl):
+
+ALLOWPROCDELFILE=/usr/sbin/mysqld
+ALLOWPROCDELFILE=/usr/sbin/apache2
+
+VAGY cseréld ki
+
+--- rkhunter        2015-12-07 03:28:53.000000000 +0900
++++ rkhunter.neu    2016-03-30 13:33:19.328416849 +0900
+@@ -13395,7 +13395,7 @@
+FNAMEGREP=`echo "${RKHTMPVAR3}" | sed -e 's/\([.$*?\\]\)/\\\\\1/g; s/\[/\\\\[/g; s/\]/\\\\]/g'`
+- if [ -n "`echo \"${FNAME}\" | grep \"^${FNAMEGREP}$\"`" ]; then
++ if [ -n "`echo \"${FNAME}\" | grep \"^${RKHTMPVAR3}$\"`" ]; then
+   PROCWHITELISTED=1
+  fi
+ else
