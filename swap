@@ -1,0 +1,6 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+	swapoff -a
+	swapon	-a
+	echo 3 > /proc/sys/vm/drop_caches
