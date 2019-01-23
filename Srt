@@ -1,0 +1,13 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+FROM=LATIN8
+TO=UTF8
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+cp $1 $1.Bak
+
+iconv -f ${FROM} -t ${TO} $1 --output=$1.Srt
