@@ -1,0 +1,127 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+SAJAT_MINTA_ELOTAG=Voli_
+MUNKA_DIR=/tmp/lc
+LC_CFG_LOGFILE=/etc/logcheck/logcheck.logfiles
+LC_CFG_MINTAK="/etc/logcheck/ignore.d.server*"
+LC_CFG_LIB=/var/lib/logcheck
+#:::::: Beallitasok :::::::::::
+LOGS=1_minden_log
+LOGS_SZURT_FILE=1_marad_log
+MINTA_ORIG=minta_orig
+MINTA=minta_sajat
+MINTA_UJ=${MINTA}_uj
+SPLIT_ELOTAG=Mintak_
+#:::::: Fuggvenyek ::::::::::::
+Logok_ossze_gyujtese(){
+    echo "A logok összegyüjtése..."
+    mkdir -p $MUNKA_DIR/tmp
+    cat $LC_CFG_LOGFILE|grep -v "^#"|while read a; do
+	cp $a* $MUNKA_DIR/tmp
+    done
+    cd $MUNKA_DIR
+    gzip -d 	./tmp/*.gz
+    cat 	./tmp/* |sort -u >$LOGS
+}
+
+Mintak_sajat_gyujtese(){
+    echo "Saját minták összegyüjtése..."
+    [ -e $MINTA.tmp ] && rm $MINTA.tmp
+    find /etc/logcheck |grep "$SAJAT_MINTA_ELOTAG" |while read a; do
+	echo "" 	>>$MINTA.tmp
+	cat $a 		>>$MINTA.tmp
+    done
+    sort -u $MINTA.tmp |grep "." 	>$MINTA
+    rm $MINTA.tmp
+}
+
+Mintak_orig_Keszites(){
+    echo "Az eredeti minták összeállítása..."
+    [ -e $MINTA_ORIG.tmp ] && rm $MINTA_ORIG.tmp
+    find $LC_CFG_MINTAK |grep -v $SAJAT_MINTA_ELOTAG |while read a; do
+	[ ! -f $a ] && continue
+	cat $a |grep -v -e "^#"	>>$MINTA_ORIG.tmp
+    done
+    sort -u $MINTA_ORIG.tmp |grep "." 	>$MINTA_ORIG
+    [ -e $MINTA_ORIG.tmp ] && rm $MINTA_ORIG.tmp
+}
+
+Logok_no_orig(){
+    echo "Az eredeti mintákkal szürt log..."
+    [ ! -f ${LOGS}.mind ] && mv ${LOGS} ${LOGS}.mind
+    grep -v  -E --text -f ${MINTA_ORIG} 	$LOGS.mind |tee $LOGS
+}
+
+Mintak_szurese(){
+    echo "Ezek a minták aktívak: ${MINTA_UJ}..."
+    [ -e ${MINTA_UJ} ] && rm ${MINTA_UJ}
+    split -l 1 $MINTA $SPLIT_ELOTAG
+
+    ls ${SPLIT_ELOTAG}* |while read a; do
+	Ret=$(grep -E --text -c  -f $a $LOGS )
+	echo -n "$Ret: 	"; cat "$a"
+	if [ ".$Ret" != ".0" ]; then
+	    cat $a >>${MINTA_UJ}
+	else
+	    cat $a >>${MINTA}.nemvolt
+	fi
+	rm $a
+    done
+    echo "Amit nem szürtünk ki: ${LOGS_SZURT_FILE}..."
+    grep -v -E --text -f $MINTA_UJ $LOGS |tee $LOGS_SZURT_FILE
+}
+
+do_check(){
+    echo "Teljes ellenörzés...";
+    start_dir=$( pwd )
+    mkdir -p $MUNKA_DIR/tmp
+    cd $MUNKA_DIR
+
+	Logok_ossze_gyujtese
+	Mintak_sajat_gyujtese
+	Mintak_orig_Keszites
+	Logok_no_orig
+	Mintak_szurese
+
+    echo "A dátum és gépnév kiszedése..."
+	sed 's/^.\{3\} .\{11\} [._[:alnum:]-]\+ //g;' 	$LOGS_SZURT_FILE |sort -u 	>$LOGS_SZURT_FILE.1
+    echo "A process pid-jének lecserélés..."
+	sed 's/\[[0-9]\+\]:/\[XXXX\]:/g;' 		$LOGS_SZURT_FILE.1 |sort -u 	>$LOGS_SZURT_FILE.2
+
+    chown -R root:logcheck $MUNKA_DIR
+    cd $start_dir
+}
+
+do_mail(){
+    echo "Levél küldése..."; 
+    sudo -u logcheck logcheck
+}
+do_uj_mail(){
+    echo "A teljes log-ra levél küldés..."
+    rm $LC_CFG_LIB/*
+    sudo -u logcheck logcheck
+}
+
+#:::::::: Start :::::::::::::::
+
+
+case "$1" in
+	check)
+	    do_check
+	;;
+	mail)
+	    do_mail
+	;;
+	uj)
+	    do_uj_mail
+	;;
+
+      *)
+        echo "$0 [check|mail|uj]"
+	echo ""
+	echo "check: 	készít: 1. melyek az aktív általad írt kivételek; 2. melyek azok a sorok amik nincsenek szűrve."
+	echo "mail: 	lefuttatja a logcheck-et."
+	echo "uj: 	Letörli a jelölést, hogy meddig volt az ellenenőrzés, és le futtatja a logcheck-et."
+esac
