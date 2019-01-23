@@ -1,0 +1,14 @@
+#/bin/bash
+
+./v4l/tbs-x86_64.sh 		||exit 1			#A kernel-hez a binárisokat illeszti
+./v4l/tbs-dvbc-x86_64.sh 	||exit 1			#A kernel-hez a binárisokat illeszti: pl. 6290, ha DvB-C -t szeretnél.....
+
+make all 			||exit 2			#- build all modules
+
+ver=$( uname -r )
+rm -rf /lib/modules/${ver}/kernel/drivers/media/		#Kell a hiba eltüntetés miatt; a read.me ajánlja
+
+make install 			||exit 3			#- Installs all modules at kernel's default dir
+
+make firmware 			||exit 4			#- Create the firmware files that are enclosed at the
+make firmware_install 		||exit 5			#Install firmware files under /lib/firmware
