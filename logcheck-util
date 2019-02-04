@@ -156,7 +156,7 @@ case "$1" in
 	;;
 
       *)
-	echo "$0 [check|mail|uj]"
+	echo "$0 [check|mail|mail-uj|sajat-uj]"
 	echo ""
 	echo "check: 	készít: 1. melyek az aktív általad írt kivételek; 2. melyek azok a sorok amik nincsenek szűrve."
 	echo "mail: 	lefuttatja a logcheck-et."
