@@ -14,6 +14,8 @@ MINTA_ORIG=minta_orig
 MINTA=minta_sajat
 MINTA_UJ=${MINTA}_uj
 SPLIT_ELOTAG=Mintak_
+
+TMP_egyedi=$MUNKA_DIR/e
 #:::::: Fuggvenyek ::::::::::::
 Logok_ossze_gyujtese(){
     echo "A logok összegyüjtése..."
@@ -104,8 +106,40 @@ do_uj_mail(){
     sudo -u logcheck logcheck
 }
 
+do_uj_kivetelek(){
+    mkdir -p $TMP_egyedi
+    cd $TMP_egyedi ; rm $TMP_egyedi/*
+    find /etc/logcheck |grep "$SAJAT_MINTA_ELOTAG" |while read a; do
+	echo "$a"
+	f=$( basename $a )
+	grep  "." $a >$f.regi
+	split -l 1    $f.regi $SPLIT_ELOTAG
+
+	ls ${SPLIT_ELOTAG}* |while read b; do
+	    Ret=$(grep -E --text -c  -f $b ../$LOGS )
+	    echo -n "$Ret: 	"; cat "$b"
+	    if [ ".$Ret" != ".0" ]; then
+		cat $b >>$f
+	    else
+		cat $b >>$f.nemvolt
+	    fi
+	    rm $b
+	done
+
+	diff $f.regi $f 	>/dev/null 2>&1
+	[ $? -eq 0 ] && ( rm $f $f.regi $f.nemvolt >/dev/null 2>&1 )
+
+	diff $f.regi $f.nemvolt 	>/dev/null 2>&1
+	[ $? -eq 0 ] && ( rm $f $f.regi >/dev/null 2>&1 )
+
+    done
+    chown -R root:logcheck $TMP_egyedi
+}
+
 #:::::::: Start :::::::::::::::
 
+
+##echo ............; read a; exit 0
 
 case "$1" in
 	check)
@@ -114,14 +148,19 @@ case "$1" in
 	mail)
 	    do_mail
 	;;
-	uj)
+	mail-uj)
 	    do_uj_mail
+	;;
+	sajat-uj)
+	    do_uj_kivetelek
 	;;
 
       *)
-        echo "$0 [check|mail|uj]"
+	echo "$0 [check|mail|mail-uj|sajat-uj]"
 	echo ""
 	echo "check: 	készít: 1. melyek az aktív általad írt kivételek; 2. melyek azok a sorok amik nincsenek szűrve."
 	echo "mail: 	lefuttatja a logcheck-et."
-	echo "uj: 	Letörli a jelölést, hogy meddig volt az ellenenőrzés, és le futtatja a logcheck-et."
+	echo "mail-uj: 	Letörli a jelölést, hogy meddig volt az ellenenőrzés, és le futtatja a logcheck-et."
+	echo "sajat-uj: Új saját kivételek gyártása a $TMP_egyedi könyvtárba."
+	echo ""
 esac
