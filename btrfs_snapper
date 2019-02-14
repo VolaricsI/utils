@@ -1,0 +1,78 @@
+#!/bin/bash
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+SNAP_DIR=SnapShot 					## Ebben a könyvtárban kerülnek tárolásra
+#:::::: Beallitasok :::::::::::
+DEV=$1
+MODE=$2
+DIR="/mnt/$( echo ${DEV}|sed 's/\//./g' )" 		## Ide történik a felcsatolás
+
+case ${MODE} in
+	(oras) 	Count=$( date +%H )
+	    ;;
+	(heti) 	Count=$( date +%w )
+	    ;;
+	(napi) 	Count=$( date +%d )
+	    ;;
+	(hetes) Count=$( date +%U )
+	    ;;
+	(havi) 	Count=$( date +%m )
+	    ;;
+	(*) 	echo "Usage: $0 DEV [oras(24)|heti(7)|hetes(52)|napi(31)|havi(12)]"
+		exit 1
+	    ;;
+esac
+
+#:::::::: Start :::::::::::::::
+	if [ ! -e ${DEV} ]; then echo "Nem létező device: ${DEV}..."; exit 1; fi
+
+	if [ -e ${DIR} ]; then
+		echo "létező könyvtár: ${DIR}..."
+		rmdir ${DIR} 2>&1
+		if [ $? != 0 ]; then echo "Nem sikerült letörölni...."; exit 1; fi
+	fi
+
+	StartTime=$( date +%s )					## Kell a futási idő számításhoz
+
+	mkdir ${DIR} 2>&1
+	mount ${DEV} ${DIR}
+	mountpoint -q ${DIR}
+	if [ $? != 0 ]; then echo "Nem sikerült csatolni: ${DIR}."; exit 1; fi 		## Sikertelen csatolás
+
+	[ ! -e ${DIR}/${SNAP_DIR}/${MODE} ] && mkdir -p ${DIR}/${SNAP_DIR}/${MODE} 		## Legyen meg a könyvtár structura ahova mentek
+	CurDir="${DIR}/${SNAP_DIR}/${MODE}" 							## Itt fogok dolgozni
+	LogFile="${CurDir}/${Count}.log"							## Naplozok
+	date 			>${LogFile}							## Itt kezdek
+
+	for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" ) ; do		## A régi mind törölve
+		btrfs su del ${CurDir}/${dir} 	>>${LogFile}
+	done
+
+	Vols=$( btrfs sub list ${DIR}| grep -v ${SNAP_DIR} | cut -d ' ' -f9  ) 			## Minden subvol-ról mentés
+	for Vol in ${Vols} ; do
+		Vold=${Vol//\//.}
+		btrfs sub snap -r ${DIR}/${Vol} ${CurDir}/${Count}-${Vold} 	>>${LogFile}
+	done
+
+	eval NemKell='$'NEMKELL_${MODE} 									## A kivételeket letörlöm mert nem kellenek...
+	for kimarad in ${NemKell}  ; do
+		[ -d ${CurDir}/${Count}-${kimarad} ] && btrfs sub del ${CurDir}/${Count}-${kimarad} 	>>${LogFile}
+	done
+
+	eval NemKell='$'NEMKELL_${MODE}_kezd 									## Így kezdődő snap-eket is törlöm
+	for kimarad in ${NemKell} ; do
+		for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" ) ; do
+			btrfs su del ${CurDir}/$dir 	>>${LogFile}
+		done
+	done
+
+	btrfs su sync ${DIR} 	>>${LogFile}							## A változásokat kiszinkronizálom
+	date 			>>${LogFile}							## Itt a vége
+
+
+	umount ${DIR} 				## Felszámolom a környezetet
+	rmdir  ${DIR}
+
+	[ ".$NO_TIME" = "." ] && echo "Futási idő (${DEV}): $[ $( date +%s )  - ${StartTime} ] sec."			## Csak tesztelés idejére
+exit 0
