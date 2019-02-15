@@ -1,0 +1,47 @@
+#!/bin/bash
+# Author: Volarics István <volaricsi@volarics.hu>
+#	Create by Voli
+
+
+#:::::: Beallitasok :::::::::::
+
+    export BTRFS_SNAP_time="Barmi_lehet" 		## Kiírja a futási időt
+    export BTRFS_SNAP_log="Barmi_lehet"			## Naplózza a futási időt (/var/log/btrfs_snapper.log)
+
+    export  NEMKELL_oras="@.tmp @.home "				## Mely kötetekről nem kell pillanatkép
+    export  NEMKELL_heti="@.tmp @.home @.usr.src "
+    export NEMKELL_hetes="@.tmp @.home @.usr.src "
+    export  NEMKELL_napi="@.tmp @.home @.usr.src "
+    export  NEMKELL_havi="@.tmp @.home @.usr.src "
+
+    export NEMKELL_oras_kezd="@.tmp "					## Az így kezdődő kötetekről nem készül pillanatkép
+
+
+#:::::::: Start :::::::::::::::
+    Mode=$1
+    [ ".${Mode}" = "." ] && Mode=${0/*-/} 			# sh esetére:$( basename $0 |sed 's/.*-//g' )
+
+	btrfs_snapper /dev/mapper/vgnotig3-root 	${Mode}
+exit $?
+
+Installálás és használat (MINTA):
+    0: A 'btrfs_snapper' legyen benne a PATH-ban, vagy írd az eléje az elérési utvonalát (itt a 23. sor)
+    1: Bemásolod egy megfelelő helyre; pl. /etc/voli
+    2: Adsz neki arra a gépre jellemző nevet; pl. 'g3' így lesz egy /etc/voli/btrfs_snapper_g3; '-' jel nem lehet a névben
+
+    cronból futtatva:
+	1: A megfelelő könyvtárban csinálsz reá egy linket amely tartalmazza a $Mode valamelyikét
+	    ln -s /etc/voli/btrfs_snapper_g3 /etc/cron.hourly/Btrfs_snapper_g3-oras
+	    ln -s /etc/voli/btrfs_snapper_g3 /etc/cron.daily/Btrfs_snapper_g3-heti
+	    ln -s /etc/voli/btrfs_snapper_g3 /etc/cron.daily/Btrfs_snapper_g3-napi
+	    ln -s /etc/voli/btrfs_snapper_g3 /etc/cron.weekly/Btrfs_snapper_g3-hetes
+	    ln -s /etc/voli/btrfs_snapper_g3 /etc/cron.monthly/Btrfs_snapper_g3-havi
+
+	2: Az /etc/cron.d/-ben létrehozol egy file-t kb. ilyen tartalommal
+	    @hourly 	root 	/etc/voli/btrfs_snapper_g3 oras
+	    @daily 	root 	/etc/voli/btrfs_snapper_g3 heti
+	    @daily 	root 	/etc/voli/btrfs_snapper_g3 napi
+	    @weekly 	root 	/etc/voli/btrfs_snapper_g3 hetes
+	    @monthly 	root 	/etc/voli/btrfs_snapper_g3 havi
+
+	3: vagy teljesen szabadon választott időpontokban
