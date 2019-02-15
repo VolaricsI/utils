@@ -72,7 +72,7 @@ esac
 	btrfs su sync ${DIR} 						>>${LogFile}				## A változásokat kiszinkronizálom
 	date 								>>${LogFile}				## Itt a vége
 	RunTime=$[ $( date +%s )  - ${StartTime} ] 								## Ennyi ideig dolgoztam
-	[ ${RunTime} -le 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -le 10 ] && RunTime=" ${RunTime}" 	## Az igazítás miatt kell
+	[ ${RunTime} -lt 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -lt 10 ] && RunTime=" ${RunTime}" 	## Az igazítás miatt kell
 	echo "Futási idő: ${RunTime} sec."	>>${LogFile}
 
 	umount ${DIR} 				## Felszámolom a környezetet
