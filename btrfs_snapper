@@ -38,7 +38,7 @@ esac
 	fi
 
 	mkdir ${DIR} 2>&1
-	mount ${DEV} ${DIR}
+	mount ${DEV} ${DIR} -o subvol=/
 	mountpoint -q ${DIR}
 	if [ $? != 0 ]; then echo "Nem sikerült csatolni: ${DIR}."; exit 1; fi 		## Sikertelen csatolás
 
