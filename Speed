@@ -15,7 +15,7 @@ CPU_FREQ_max=$[$( cat ${DIR}/cpuinfo_max_freq|sort -u )/1000]
 #:::::: Start :::::::::::::::::
     echo "usage: "$(basename $0)" [management]"
     if [ -n "$1" ]; then
-	echo Meg probalom beaalitani az uj managementet ($1)....
+	echo "Meg probalom beaalitani az uj managementet ($1)...."
 	for x in $( ls ${DIR}/scaling_governor ); do
 		echo -n "$1" 	>>$x
 	done
