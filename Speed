@@ -3,33 +3,40 @@
 #	Create by Voli
 
 #:::::: Fix beallitasok :::::::
-GOVERNORS='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_available_governors'
-GOVERNOR='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_governor'
-CUR_FREQ='/sys/devices/system/cpu/cpu[0-9]/cpufreq/scaling_cur_freq'
-KONVERT='s/[0-9]\{3\}$//g; s/\([0-9]\+\)\([0-9]\{3\}$\)/\1\.\2/g; '			#KHz-ből MHz és tizedes pont is bekerül
+DIR="/sys/devices/system/cpu/cpufreq/policy[0-9]*"
+
 #:::::: Beallitasok :::::::::::
-CPU_FREQ_MIN=$( cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq |sed "${KONVERT}")
-CPU_FREQ_MAX=$( cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq |sed "${KONVERT}")
+CPU_FREQ_min=$[$( cat ${DIR}/cpuinfo_min_freq|sort -u )/1000]
+CPU_FREQ_max=$[$( cat ${DIR}/cpuinfo_max_freq|sort -u )/1000]
+
 
 #:::::: Ellenorzesek ::::::::::
 #:::::: functions :::::::::::::
 #:::::: Start :::::::::::::::::
+    echo "usage: "$(basename $0)" [management]"
     if [ -n "$1" ]; then
-	echo Meg probalom beaalitani az uj managementet: $1....
-	for x in ${GOVERNOR}; do
-		echo "$1" >>$x
+	echo Meg probalom beaalitani az uj managementet ($1)....
+	for x in $( ls ${DIR}/scaling_governor ); do
+		echo -n "$1" 	>>$x
 	done
     fi
 
-    echo "CPU frekvencia, min: ${CPU_FREQ_MIN} Mhz; max: ${CPU_FREQ_MAX} MHz."
-    echo -n "Lehetseges CPU frekvencia management: "; cat ${GOVERNORS}	|sort -u
-    echo -n "Aktualis   CPU frekvencia management: "; cat ${GOVERNOR}	|sort -u
+    echo "CPU frekvencia, min: ${CPU_FREQ_min} Mhz; max: ${CPU_FREQ_max} MHz."
+    echo -n "Lehetseges CPU frekvencia management(ek): "; cat ${DIR}/scaling_available_governors |sort -u
+    echo -n "Aktualis   CPU frekvencia management(ek): "; cat ${DIR}/scaling_governor 		 |sort -u
 
     cnt=0
     while true; do
-	echo -n "${cnt}:	"
-	S=$( cat ${CUR_FREQ} |sed "${KONVERT} s/${CPU_FREQ_MIN}/.../g; s/\(^.\{3\}$\)/..\1/g " )
-	echo ${S}
-
+	echo -ne "\r\n${cnt}: "
+	for x in ${DIR}/scaling_cur_freq ; do
+	    s=$[$( cat $x )/1000]
+	    if [ $s -le ${CPU_FREQ_min} ]; then
+		echo -ne "\t....."
+	    elif [ $s -lt 1000 ]; then
+		echo -ne "\t  $s"
+	    else
+		echo -ne "\t$s"|sed 's/\(^\t.\)/\1\./g'
+	    fi
+	done
 	cnt=$[${cnt}+1]; sleep 1
     done
