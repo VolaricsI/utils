@@ -1,0 +1,45 @@
+#!/bin/bash
+# Author: Volarics István <volaricsi@volarics.hu>
+#	Create by Voli
+
+
+#:::::: Beallitasok :::::::::::
+
+    export zfs_SNAP_time="Barmi_lehet" 		## Kiírja a futási időt
+    export zfs_SNAP_log="Barmi_lehet"		## Naplózza a futási időt (/var/log/zfs_snapper.log)
+
+    export  ZFS_Kivetelek="docker@ NAS/tmp@ NAS/work@havi "	## Miről nem kérsz snapshotot:
+								## docker@: 	Az egész docker pool-ról nem lesz
+								## NAS/tmp@: 	A tmp volume-ról
+								## NAS/work@havi 	A NAS pool, work volume-ának nem lesz havi snapshotja
+
+
+#:::::::: Start :::::::::::::::
+    Mode=$1
+    [ ".${Mode}" = "." ] && Mode=${0/*-/} 			# sh esetére:$( basename $0 |sed 's/.*-//g' )
+
+    zfs_snapper ${Mode}
+
+exit $?
+
+Installálás és használat (MINTA):
+    0: A 'zfs_snapper' legyen benne a PATH-ban, vagy írd az eléje az elérési utvonalát (itt a 23. sor)
+    1: Bemásolod egy megfelelő helyre; pl. /etc/voli
+    2: Adsz neki arra a gépre jellemző nevet; pl. 'g3' így lesz egy /etc/voli/zfs_snapper_g3; '-' jel nem lehet a névben
+
+    cronból futtatva:
+	1: A megfelelő könyvtárban csinálsz reá egy linket amely tartalmazza a $Mode valamelyikét
+	    ln -s /etc/voli/zfs_snapper_g3 /etc/cron.hourly/zfs_snapper_g3-oras
+	    ln -s /etc/voli/zfs_snapper_g3 /etc/cron.daily/zfs_snapper_g3-heti
+	    ln -s /etc/voli/zfs_snapper_g3 /etc/cron.daily/zfs_snapper_g3-napi
+	    ln -s /etc/voli/zfs_snapper_g3 /etc/cron.weekly/zfs_snapper_g3-hetes
+	    ln -s /etc/voli/zfs_snapper_g3 /etc/cron.monthly/zfs_snapper_g3-havi
+
+	2: Az /etc/cron.d/-ben létrehozol egy file-t kb. ilyen tartalommal
+	    @hourly 	root 	/etc/voli/zfs_snapper_g3 oras
+	    @daily 	root 	/etc/voli/zfs_snapper_g3 heti
+	    @daily 	root 	/etc/voli/zfs_snapper_g3 napi
+	    @weekly 	root 	/etc/voli/zfs_snapper_g3 hetes
+	    @monthly 	root 	/etc/voli/zfs_snapper_g3 havi
+
+	3: vagy teljesen szabadon választott időpontokban

@@ -1,0 +1,59 @@
+#!/bin/sh
+# Author: Volarics István <volaricsi@freemail.hu>
+#	Create by Voli
+
+ZFS_Kivetelek="  SRV/mythTV@heti SRV/mythTV@napi SRV/mythTV@hetes SRV/mythTV@havi SRV/Deluge@hetes SRV/Deluge@napi SRV/Deluge@hetes SRV/Deluge@havi  docker@  "
+
+#:::::: Fix beallitasok :::::::
+LOG_FILE=/var/log/zfs_snapper.log			## Ide készül napló ha kérted
+#:::::: Beallitasok :::::::::::
+Mode=$1 						## Milyen pillanatképet készítünk
+Pools=$2 						## Melyik meghajtóval foglalkozunk
+
+[ ".$2" = "." ] && Pools=$( zpool list -H -o name ) 		## Ha nincs megadva akkor minden pool-ról kell
+Pools=$( echo $Pools ) 						## Kiíratások miatt nem lehet soremelés benne
+[ ".$1" = "." ] && Mode=$( basename $0 |sed 's/.*-//g' ) 	## Ha nincs megadva, még lehet a filenév végén....
+
+
+case ${Mode} in
+	(oras)
+		Count=$( date +%H ) ; ttl=1d
+	    ;;
+	(heti)
+		Count=$( date +%w ) ; ttl=1w
+	    ;;
+	(napi)
+		Count=$( date +%d ) ; ttl=1m
+	    ;;
+	(hetes)
+		Count=$( date +%W ) ; ttl=1y
+	    ;;
+	(havi)
+		Count=$( date +%m ) ; ttl=1y
+	    ;;
+	(*)
+	    echo "Usage: $0 [oras(24)|heti(7)|napi(31)|hetes(52)|havi(12)] [pool]"
+	    exit 1
+	    ;;
+esac
+
+#:::::::: Start :::::::::::::::
+    StartTime=$( date +%s ) 									## Kell a futási idő számításhoz
+
+    zfSnap -v -d -e -r -a ${ttl} -p "${Mode}-" ${Pools}
+    Ret=$?; [ $Ret -ne 0 ] && echo "A ${pools} snapshot közben ${Ret} hiba tortent..."
+
+    if [ ".${ZFS_Kivetelek}" != "." ] ; then 									## Amiről nek kell azt törlöm
+	grep_pools=$( echo ${Pools} |sed 's/^/ /g; s/ / -e ^/g; ' ) 			## Csak az aktuális pool-okon végezhetünk törlést
+	grep_nem=$( echo ${ZFS_Kivetelek}|sed 's/^/ /g; s/ \+/ -e ^/g; ' ) 		## Ezek amik nem kellenek
+
+	zfs list -H -o name -t snapshot |grep $grep_pools |grep "@${Mode}-" |grep $grep_nem |while read fs; do
+		zfs destroy -v -r ${fs}
+	done
+    fi
+
+    RunTime=$( expr $( date +%s )  - ${StartTime} ) 									## Ennyi ideig dolgoztam
+    [ ${RunTime} -lt 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -lt 10 ] && RunTime=" ${RunTime}" 			## Az igazítás miatt kell
+    [ ".$ZFS_SNAP_time" != "." ] && echo "Futási idő (${Pools}): ${RunTime} sec." 					## Csak tesztelés idejére
+    [ ".$ZFS_SNAP_log"  != "." ] && date "+%Y.%m.%d-%H:%M ==> ${Pools}: ${RunTime} sec." 	>>${LOG_FILE} 		## Nappló a későbbre
+exit 0
