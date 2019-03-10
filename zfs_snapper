@@ -2,8 +2,6 @@
 # Author: Volarics István <volaricsi@freemail.hu>
 #	Create by Voli
 
-ZFS_Kivetelek="  SRV/mythTV@heti SRV/mythTV@napi SRV/mythTV@hetes SRV/mythTV@havi SRV/Deluge@hetes SRV/Deluge@napi SRV/Deluge@hetes SRV/Deluge@havi  docker@  "
-
 #:::::: Fix beallitasok :::::::
 LOG_FILE=/var/log/zfs_snapper.log			## Ide készül napló ha kérted
 #:::::: Beallitasok :::::::::::
