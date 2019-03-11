@@ -38,7 +38,7 @@ esac
 #:::::::: Start :::::::::::::::
     StartTime=$( date +%s ) 									## Kell a futási idő számításhoz
 
-    zfSnap -v -d -e -r -a ${ttl} -p "${Mode}-" ${Pools}
+    zfSnap -d -e -r -a ${ttl} -p "${Mode}-" ${Pools}
     Ret=$?; [ $Ret -ne 0 ] && echo "A ${pools} snapshot közben ${Ret} hiba tortent..."
 
     if [ ".${ZFS_Kivetelek}" != "." ] ; then 									## Amiről nek kell azt törlöm
@@ -46,7 +46,7 @@ esac
 	grep_nem=$( echo ${ZFS_Kivetelek}|sed 's/^/ /g; s/ \+/ -e ^/g; ' ) 		## Ezek amik nem kellenek
 
 	zfs list -H -o name -t snapshot |grep $grep_pools |grep "@${Mode}-" |grep $grep_nem |while read fs; do
-		zfs destroy -v -r ${fs}
+		zfs destroy -r ${fs}
 	done
     fi
 
