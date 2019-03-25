@@ -36,17 +36,17 @@ case ${Mode} in
 esac
 
 #:::::::: Start :::::::::::::::
-    StartTime=$( date +%s ) 									## Kell a futási idő számításhoz
+    StartTime=$( date +%s ) 								## Kell a futási idő számításhoz
 
     zfSnap -d -e -r -a ${ttl} -p "${Mode}-" ${Pools}
     Ret=$?; [ $Ret -ne 0 ] && echo "A ${pools} snapshot közben ${Ret} hiba tortent..."
 
-    if [ ".${ZFS_Kivetelek}" != "." ] ; then 									## Amiről nek kell azt törlöm
+    if [ ".${ZFS_Kivetelek}" != "." ] ; then 						## Amiről nek kell azt törlöm
 	grep_pools=$( echo ${Pools} |sed 's/^/ /g; s/ / -e ^/g; ' ) 			## Csak az aktuális pool-okon végezhetünk törlést
 	grep_nem=$( echo ${ZFS_Kivetelek}|sed 's/^/ /g; s/ \+/ -e ^/g; ' ) 		## Ezek amik nem kellenek
 
 	zfs list -H -o name -t snapshot |grep $grep_pools |grep "@${Mode}-" |grep $grep_nem |while read fs; do
-		zfs destroy -r ${fs}
+		zfs destroy ${fs} 										## Nem lehet rekurzív (-r), mert így törölhet olyat amit nem szabad
 	done
     fi
 
