@@ -1,0 +1,15 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+FILE=/lib/systemd/systemd-networkd-wait-online
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+[ ! -h ${FILE} ] && mv ${FILE} ${FILE}.orig
+
+[ ! -e ${FILE} ] && ln -s /bin/true ${FILE}
+
+ls -lh ${FILE}
+
