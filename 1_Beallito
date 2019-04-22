@@ -19,6 +19,7 @@ Set(){
 }
 
 #:::::::: Start :::::::::::::::
-    Set dfv dpkgl lcv psv psxv refreshclam Speed tailv tarx update ver rkhunterv Srt logcheck-util fail2banv btrfs_snapper zfs_snapper network-online
+    Set dfv dpkgl lcv psv psxv refreshclam Speed tailv tarx update ver rkhunterv Srt logcheck-util fail2banv btrfs_snapper zfs_snapper 	\
+	network-online operavideo
 
 
