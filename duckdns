@@ -1,0 +1,49 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+##LEIRAS, BESZEDES 					## Exportból érkezik: A domain leírása és az hogy mennyire legyen beszédes ez a script
+#LEIRAS="Update:"$( date +%Y.%m.%d.%H:%M )			## a dig $DOMAIN.duckdnc.org TXT megjeleníti ezt az infót. NEM lehet benne szóköz és vezérlő karakter!!!
+
+BESZEDES_URL="&verbose=true" 					## Ez kell ha beszédes üzemet akarsz
+Curl="/usr/bin/curl -k --silent --connect-timeout 10 " 		## A curl és paraméterezése
+
+#:::::: Beallitasok :::::::::::
+if [ -z $2 ]; then 						## Help
+    echo "usage: $0 DomainNeve Token [IPv6_DevNeve]"
+    exit 1
+fi
+
+[ -n $1 ] && Domain=$1 						## Másoljuk a megfelelő helyre a paramétereket
+[ -n $2 ] && Token=$2
+[ -n $3 ] && Dev=$3
+[ ! -z ${BESZEDES} ] && Beszedes=${BESZEDES_URL} 		## Jellemzően teszteléshez kell a beszédes mód
+
+Url="https://www.duckdns.org/update?domains=${Domain}&token=${Token}${Beszedes}" 	## Minden url-nek ez az alapja
+
+
+#:::::: Fuggvenyek ::::::::::::
+Update(){ 						## A hibakezelés miatt került fügvénybe
+    Result=$( ${Curl} "${Url}$1" )
+    Ret=$?
+
+[ $Ret -eq  0 ] && return 0 	## Minden OK
+[ $Ret -eq  6 ] && return 0 	## Couldn't resolve host.
+[ $Ret -eq  7 ] && return 0 	## Failed to connect to host.
+[ $Ret -eq 28 ] && return 0 	## Time out
+
+    echo "===== $Ret =====>\n $Result\n<====" 	## Hiba esetén írja ki a választ is
+}
+
+#:::::::: Start :::::::::::::::
+	[ -n "${LEIRAS}" ] && Update "&txt=${LEIRAS}" 	## Van leírás
+
+	Update "&ip=" 					## auto detect IPv4-re
+
+    [ -z "${Dev}" ] && exit 0 				## Nem kell IPv6
+
+	Ipv6=$( ip -6 address show scope global dev ${Dev} |grep 'inet6.*2001'|sed 's/.*inet6 *//g; s/\/.*//g; ' )
+
+    [ -z "${Ipv6}" ] && exit 0 				## Nincs IPv6-os cím
+
+	Update "&ipv6=${Ipv6}"

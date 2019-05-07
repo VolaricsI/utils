@@ -1,0 +1,11 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+export LEIRAS="A_domain_leirasa"
+
+export BESZEDES="true"
+
+
+    duckdns DomainName "TokenAmiJoHosszu" "ethCsatolóHaAkarszIPv6-ot"
+
+    duckdns DomainName1 "TokenAmiJoHosszuEsLehetMasDeAzonosIs" "pl.enp3s0"
