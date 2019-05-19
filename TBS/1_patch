@@ -1,0 +1,9 @@
+#/bin/bash
+
+wget https://bitbucket.org/CrazyCat/linux-tbs-drivers/raw/c64955dd0fe79c9c76628de424bd2ec57ede115b/linux/drivers/media/video/ivtv/ivtv-yuv.c
+wget https://bitbucket.org/CrazyCat/linux-tbs-drivers/raw/c64955dd0fe79c9c76628de424bd2ec57ede115b/linux/drivers/media/video/ivtv/ivtv-udma.c
+wget https://bitbucket.org/CrazyCat/linux-tbs-drivers/raw/c64955dd0fe79c9c76628de424bd2ec57ede115b/linux/drivers/media/video/videobuf-dma-sg.c
+wget https://bitbucket.org/CrazyCat/linux-tbs-drivers/raw/c64955dd0fe79c9c76628de424bd2ec57ede115b/linux/drivers/media/video/videobuf2-dma-sg.c
+
+cp ivtv-yuv.c ivtv-udma.c 			linux-tbs-drivers/linux/drivers/media/video/ivtv
+cp videobuf-dma-sg.c videobuf2-dma-sg.c 	linux-tbs-drivers/linux/drivers/media/video
