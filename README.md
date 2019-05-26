@@ -8,6 +8,15 @@
 ##	*.example
 	    Mint külön állomány mintát tartalmaz a használatáról a "*" nevű script-nek
 
+##	TBS
+	    A TBS álltal gyártott DVB-T/C tunerekhez fordítási script; valamint patch, hogy újjab kernelekkel is leforduljon
+
+##	lid
+	    A laptop fedél lecsukásakor kapcsolja ki a kijelzőt
+
+
+
+
 ##	btrfs-du
 	    egy nagyon jó program:
 		wget https://raw.githubusercontent.com/nachoparker/btrfs-du/master/btrfs-du -O /usr/local/sbin/btrfs-du
