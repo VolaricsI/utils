@@ -1,0 +1,16 @@
+--- /etc/systemd/logind.conf	2016-04-12 12:34:03.000000000 +0200
++++ logind.conf	2019-05-26 11:22:00.168659711 +0200
+@@ -21,8 +21,13 @@
+ #HandlePowerKey=poweroff
+ #HandleSuspendKey=suspend
+ #HandleHibernateKey=hibernate
++
++#By Voli
++HandleLidSwitch=ignore
++HandleLidSwitchDocked=ignore
+ #HandleLidSwitch=suspend
+ #HandleLidSwitchDocked=ignore
++
+ #PowerKeyIgnoreInhibited=no
+ #SuspendKeyIgnoreInhibited=no
+ #HibernateKeyIgnoreInhibited=no
