@@ -6,7 +6,7 @@
 	    Egy csontváz a jövőbeni script-ek számára
 
 ##	*.example
-	    Mint külön állomány mintát tartalmaz a használatáról a "*" nevű script-nek
+	    Minta állomány, a "*" nevű script használatához
 
 ##	TBS
 	    A TBS álltal gyártott DVB-T/C tunerekhez fordítási script; 
