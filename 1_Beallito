@@ -2,23 +2,31 @@
 #	Created by Volarics Istvan (Voli)
 
 #:::::: Fix beallitasok :::::::
-CEL=/usr/local/bin
-FORRAS=/home/mynet/usr_local_bin
+CEL=/usr/local/bin 		## Legyen benne a PATH-ban
 #:::::: Beallitasok :::::::::::
 #:::::: Fuggvenyek ::::::::::::
 
 Set(){
 	while [ ".$1" != "." ]; do
-	echo Set ${CEL}: $1
-		[ -L ${CEL}/$1 ] && rm ${CEL}/$1
-
+	fname=$( readlink -f $1 )
+##	echo "${CEL}/$1 ==> 	${fname}"
+		[   -L ${CEL}/$1 ] && rm ${CEL}/$1
 		[   -e ${CEL}/$1 ] && echo "Létezik a file: ${CEL}/$1"
-		[ ! -e ${CEL}/$1 ] && ln -s ${FORRAS}/$1 ${CEL}/$1
+		[ ! -e ${CEL}/$1 ] && ln -s ${fname} ${CEL}/$1
 	    shift
 	done
 }
 
 #:::::::: Start :::::::::::::::
-    Set dfv dpkgl lcv psv psxv refreshclam Speed tailv tarx update ver rkhunterv Srt logcheck-util fail2banv \
-	btrfs_snapper zfs_snapper network-online duckdns operavideo
 
+    ## Ezek nem a PATH-ba valók: btrfs_snapper_g3.example duckdns_g3.example zfs_snapper_g3.example
+
+    ## Minta állományok 0 fordit syscp syscp.rsync
+
+    ## Fejlesztés alatt: duv ssh-arhiv
+
+    Set ver Srt tarx Speed duckdns swap update 		\
+	dfv psv psxv tailv dpkgl fail2banv rkhunterv 	\
+	lcv logcheck-util 				\
+	zfs_snapper btrfs_snapper 			\
+	network-online operavideo refreshclam 
