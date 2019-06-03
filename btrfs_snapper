@@ -58,12 +58,12 @@ esac
 	done
 
 	eval NemKell='$'NEMKELL_${MODE} 									## A kivételeket letörlöm mert nem kellenek...
-	for kimarad in ${NemKell}  ; do
+	for kimarad in ${NemKell} ${NEMKELL} ; do
 		[ -d ${CurDir}/${Count}-${kimarad} ] && btrfs sub del ${CurDir}/${Count}-${kimarad} 	>>${LogFile}
 	done
 
 	eval NemKell='$'NEMKELL_${MODE}_kezd 									## Így kezdődő snapshot-okat is törlöm
-	for kimarad in ${NemKell} ; do
+	for kimarad in ${NemKell} ${NEMKELL_kezd}; do
 		for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" ) ; do
 			btrfs su del ${CurDir}/$dir 	>>${LogFile}
 		done

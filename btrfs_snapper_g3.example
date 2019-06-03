@@ -8,14 +8,16 @@
     export BTRFS_SNAP_time="Barmi_lehet" 		## Kiírja a futási időt
     export BTRFS_SNAP_log="Barmi_lehet"			## Naplózza a futási időt (/var/log/btrfs_snapper.log)
 
+
     export  NEMKELL_oras="@.tmp @.home "				## Mely kötetekről nem kell pillanatkép
     export  NEMKELL_heti="@.tmp @.home @.usr.src "
     export NEMKELL_hetes="@.tmp @.home @.usr.src "
     export  NEMKELL_napi="@.tmp @.home @.usr.src "
     export  NEMKELL_havi="@.tmp @.home @.usr.src "
+    export  NEMKELL="@.tmp @.home "					## Ezzel időtől függetlenül tiltva a készítés
 
     export NEMKELL_oras_kezd="@.tmp "					## Az így kezdődő kötetekről nem készül pillanatkép
-
+    export NEMKELL_kezd="@.tmp "					## Ezzel időtől függetlenül tiltva a készítés
 
 #:::::::: Start :::::::::::::::
     Mode=$1
