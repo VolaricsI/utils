@@ -6,9 +6,10 @@
 
     A zfs_revert-0.1.py amire majd szükséged lesz itt érhető el:  https://gist.github.com/jshoward/5685757
 
-    HA töröltél filesystem|volume|snapshot és kell a visszaállítás; Akkor itt megtalálod miként tudsz egy előző pillanatra vissza állni!!!!!
+    Ha töröltél filesystem|volume|snapshot és kell a visszaállítás; 
+    Akkor itt megtalálod miként tudsz egy előző pillanatra vissza állni!!!!!
     Ez egy valós visszaállítás története és valós nevekkel.
-	A szám amit csináltam, betű(a) amit helyette lehet tenni
+	A szám amit csináltam, betű (a) amit helyette lehet tenni
 
 
     0. 		Azonnal állítsd le a gépet!!
@@ -34,7 +35,7 @@
 
     6. 		fdisk -l /dev/sdg ; fdisk -l /dev/sdh
 	    Itt a pool-t alkotó disk-ek vagy particiók mérete kell, a sector számra (7811919872)
-	    Ha nagyobbat írsz be az nem okoz gondoot
+	    Ha nagyobbat írsz be az nem okoz gondot
 		------------------------------
 		Device          Start        End    Sectors  Size Type
 		/dev/sdg1        2048 7811921919 7811919872  3,7T Solaris /usr & Apple ZFS
@@ -44,7 +45,7 @@
     7. 		zfs_revert-0.1.py -tb=7811919872 /dev/sdg1 és 
 		zfs_revert-0.1.py -tb=7811919872 /dev/sdh1
 	    Most keresed le a még elérhető adminisztrációs területeket és ezt is mentsd (revert.txt)
-	    MINDEN diszken végezd el ami a pool része
+	    MINDEN diszken végezd el ami a pool-nak része
 		------------------------------
 		TXG	TIME	TIMESTAMP	BLOCK ADDRESSES
 		100379259	19 May 2019 21:33:29	1558294409	[472, 984]
@@ -78,7 +79,3 @@
     10. 	zpool export SRV ; zpool import SRV ; zpool history SRV
 	    Ellenőrizük le, hogy visszaálltunk a tudottan valid adatokra a 
 	    3,4 ponttal összehasonjítani
-
-
-
-
