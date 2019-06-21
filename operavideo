@@ -5,4 +5,16 @@
 #:::::: Beallitasok :::::::::::
 #:::::: Fuggvenyek ::::::::::::
 #:::::::: Start :::::::::::::::
-cp /usr/lib/chromium-browser/libffmpeg.so /usr/lib/x86_64-linux-gnu/opera
+
+    cmp /usr/lib/chromium-browser/libffmpeg.so 			/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so 	2>/dev/null
+
+[ $? -eq 0 ] && exit 0
+
+    ls -lh  /usr/lib/chromium-browser/libffmpeg.so 		/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so
+    sudo mv /usr/lib/x86_64-linux-gnu/opera/libffmpeg.so 	/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so.orig
+    sudo cp /usr/lib/chromium-browser/libffmpeg.so 		/usr/lib/x86_64-linux-gnu/opera
+    echo "---------- eredmeny --------------------"
+    ls -lh /usr/lib/chromium-browser/libffmpeg.so 		/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so*
+
+exit 0
+
