@@ -5,4 +5,6 @@
 #:::::: Beallitasok :::::::::::
 #:::::: Fuggvenyek ::::::::::::
 #:::::::: Start :::::::::::::::
-cp /usr/lib/chromium-browser/libffmpeg.so /usr/lib/x86_64-linux-gnu/opera
+ls -lh /usr/lib/chromium-browser/libffmpeg.so /usr/lib/x86_64-linux-gnu/opera/libffmpeg.so
+
+ln -nf /usr/lib/chromium-browser/libffmpeg.so /usr/lib/x86_64-linux-gnu/opera
