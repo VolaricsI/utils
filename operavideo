@@ -6,5 +6,10 @@
 #:::::: Fuggvenyek ::::::::::::
 #:::::::: Start :::::::::::::::
 
+    ls -lh /usr/lib/chromium-browser/libffmpeg.so 	/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so*
+
+    echo "... és utánna...."
+
+
     ln -nf /usr/lib/chromium-browser/libffmpeg.so 	/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so
     ls -lh /usr/lib/chromium-browser/libffmpeg.so 	/usr/lib/x86_64-linux-gnu/opera/libffmpeg.so*
