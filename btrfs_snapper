@@ -83,7 +83,7 @@ esac
 	umount ${DIR} 													## Felszámolom a környezetet
 	rmdir  ${DIR}
 
-	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 						## Csak tesztelés idejére
-	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d-%H:%M:%S ==>	${DEV}(${MODE}): ${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
+	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 							## Csak tesztelés idejére
+	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d. %H:%M:%S ==> ${DEV}(${MODE}): 	${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
 
 exit 0
