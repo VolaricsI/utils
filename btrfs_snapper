@@ -4,6 +4,7 @@
 #:::::: Fix beallitasok :::::::
 SNAP_DIR=SnapShot 					## Ebben a könyvtárban kerülnek tárolásra a pillanatképek
 LOG_FILE=/var/log/btrfs_snapper.log			## Ide készül napló ha kérted
+LOG_FORMAT="+%Y.%m.%d. %R:%S ==> " 			## Az időbélyegek formája
 #:::::: Beallitasok :::::::::::
 DEV=$1							## Melyik meghajtóval foglalkozunk
 MODE=$2							## Milyen pillanatképet készítünk
@@ -45,40 +46,44 @@ esac
 	[ ! -e ${DIR}/${SNAP_DIR}/${MODE} ] && mkdir -p ${DIR}/${SNAP_DIR}/${MODE} 		## Legyen meg a könyvtár structura ahova mentek
 	CurDir="${DIR}/${SNAP_DIR}/${MODE}" 							## Itt fogok dolgozni
 	LogFile="${CurDir}/${Count}.log"							## Ide fogok Naplózni
-	date 			>${LogFile}							## Most kezdek kezdek
+	date "${LOG_FORMAT} Kezdés" 			>${LogFile}				## Most kezdek
 
-	for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" ) ; do		## A régi mind törölve
-		btrfs subvolume delete ${CurDir}/${dir} 	>>${LogFile}
-	done
+	for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" ) ; do			## A régi mind törölve
+		btrfs subvolume delete ${CurDir}/${dir}
+	done 						>>${LogFile}
+	date "${LOG_FORMAT} Törlések vége" 		>>${LogFile}
 
-	Vols=$( btrfs sub list ${DIR}| grep -v ${SNAP_DIR} | cut -d ' ' -f9  ) 			## Minden subvol-ról mentés
+	Vols=$( btrfs subvolume list ${DIR}| grep -v ${SNAP_DIR} | cut -d ' ' -f9  ) 					## Minden subvol-ról mentés
 	for Vol in ${Vols} ; do
 		Vold=${Vol//\//.}
-		btrfs subvolume snapshot -r ${DIR}/${Vol} ${CurDir}/${Count}-${Vold} 	>>${LogFile}
-	done
+		btrfs subvolume snapshot -r ${DIR}/${Vol} ${CurDir}/${Count}-${Vold}
+	done 						>>${LogFile}
+	date "${LOG_FORMAT} --> snapshot készítés kész" >>${LogFile}
 
-	eval NemKell='$'NEMKELL_${MODE} 									## A kivételeket letörlöm mert nem kellenek...
+	eval NemKell='$'NEMKELL_${MODE} 										## A kivételeket letörlöm mert nem kellenek...
 	for kimarad in ${NemKell} ${NEMKELL} ; do
-		[ -d ${CurDir}/${Count}-${kimarad} ] && btrfs subvolume delete ${CurDir}/${Count}-${kimarad} 	>>${LogFile}
-	done
+		[ -d ${CurDir}/${Count}-${kimarad} ] && btrfs subvolume delete ${CurDir}/${Count}-${kimarad}
+	done 						>>${LogFile}
 
-	eval NemKell='$'NEMKELL_${MODE}_kezd 									## Így kezdődő snapshot-okat is törlöm
+	eval NemKell='$'NEMKELL_${MODE}_kezd 										## Így kezdődő snapshot-okat is törlöm
 	for kimarad in ${NemKell} ${NEMKELL_kezd}; do
 		for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" ) ; do
-			btrfs subvolume delete ${CurDir}/$dir 	>>${LogFile}
+			btrfs subvolume delete ${CurDir}/$dir
 		done
-	done
+	done 						>>${LogFile}
+	date "${LOG_FORMAT} Ami nem kell az törölve" 	>>${LogFile}
 
-	btrfs su sync ${DIR} 						>>${LogFile}				## A változásokat kiszinkronizálom
-	date 								>>${LogFile}				## Itt a vége
-	RunTime=$[ $( date +%s )  - ${StartTime} ] 								## Ennyi ideig dolgoztam
-	[ ${RunTime} -lt 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -lt 10 ] && RunTime=" ${RunTime}" 	## Az igazítás miatt kell
-	echo "Futási idő: ${RunTime} sec."	>>${LogFile}
 
-	umount ${DIR} 				## Felszámolom a környezetet
+	btrfs subvolume sync ${DIR} 			>>${LogFile}							## A változásokat kiszinkronizálom
+	date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}							## Itt a vége
+	RunTime=$[ $( date +%s )  - ${StartTime} ] 									## Ennyi ideig dolgoztam
+	[ ${RunTime} -lt 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -lt 10 ] && RunTime=" ${RunTime}" 		## Az igazítás miatt kell
+	echo "Futási idő: ${RunTime} sec."		>>${LogFile}
+
+	umount ${DIR} 													## Felszámolom a környezetet
 	rmdir  ${DIR}
 
-	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 					## Csak tesztelés idejére
-	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d-%H:%M ==> ${DEV} : ${RunTime} sec." 	>>${LOG_FILE}		## Nappló a későbbre
+	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 						## Csak tesztelés idejére
+	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d-%H:%M:%S ==>	${DEV}(${MODE}): ${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
 
 exit 0
