@@ -23,7 +23,7 @@ CPU_FREQ_max=$[$( cat ${DIR}/cpuinfo_max_freq|sort -u )/1000]
 
     echo "CPU magok: $( cat /proc/cpuinfo | grep "^cpu cores"|sort -u|sed 's/.*://g; ' ), szálak: $( cat /proc/cpuinfo | grep "^siblings"|sort -u|sed 's/.*://g; ' )."
     echo "CPU frekvencia, min: ${CPU_FREQ_min} Mhz; max: ${CPU_FREQ_max} MHz."
-    echo -n "Lehetseges CPU frekvencia management(ek): "; cat ${DIR}/scaling_available_governors |sort -u
+    echo -n "Lehetseges CPU frekvencia management(ek): "; cat ${DIR}/scaling_available_governors |sort -u 	#Így mindegyiket csak 1-szer írja ki
     echo -n "Aktualis   CPU frekvencia management(ek): "; cat ${DIR}/scaling_governor 		 |sort -u
 
     cnt=0
