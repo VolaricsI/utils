@@ -35,13 +35,13 @@ esac
 	if [ -e ${DIR} ]; then
 		echo "létező könyvtár: ${DIR}..."
 		rmdir ${DIR} 2>&1
-		if [ $? != 0 ]; then echo "Nem sikerült letörölni...."; exit 1; fi
+		if [ $? -ne 0 ]; then echo "Nem sikerült letörölni...."; exit 1; fi
 	fi
 
 	mkdir ${DIR} 2>&1
 	mount ${DEV} ${DIR} -o subvol=/
 	mountpoint -q ${DIR}
-	if [ $? != 0 ]; then echo "Nem sikerült csatolni: ${DIR}."; exit 1; fi 		## Sikertelen csatolás
+	if [ $? -ne 0 ]; then echo "Nem sikerült csatolni: ${DIR}."; exit 1; fi 		## Sikertelen csatolás
 
 	[ ! -e ${DIR}/${SNAP_DIR}/${MODE} ] && mkdir -p ${DIR}/${SNAP_DIR}/${MODE} 		## Legyen meg a könyvtár structura ahova mentek
 	CurDir="${DIR}/${SNAP_DIR}/${MODE}" 							## Itt fogok dolgozni
