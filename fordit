@@ -23,9 +23,9 @@ InitRD(){
 
 #:::::::: Start :::::::::::::::
 	cd "${DIR}"
-	if [ "$?" != "0" ]; then exit 1; fi
+	[ $? -ne 0 ] && exit 1
 
-	if [ ".$1" == "." ]; then 
+	if [ -z "$1" ]; then 
 		echo "Usage: $0 {Menu|Torles|Kernel|kernel Install|MODul|Modul Install|INITramfs|Full deb}";
 		exit 2
 	fi
@@ -36,17 +36,17 @@ case "$1" in
 	    ;;
 
       t)	echo "Torles...  "; 
-	    make dep;			if [ "$?" != "0" ]; then exit 1; fi
-	    make clean;			if [ "$?" != "0" ]; then exit 1; fi
-	    make mrproper;		if [ "$?" != "0" ]; then exit 1; fi
+	    make dep; 				[ $? -ne 0 ] && exit 1
+	    make clean; 			[ $? -ne 0 ] && exit 1
+	    make mrproper; 			[ $? -ne 0 ] && exit 1
 	    ;;
 
       k)	echo "Kernel forditas..."
-	    make ${MAKE_PARAM} bzImage;		if [ "$?" != "0" ]; then exit 1; fi
+	    make ${MAKE_PARAM} bzImage; 	[ $? -ne 0 ] && exit 1
 	    ;;
 
       i)	echo "Csak kernel install..."
-	    make install;		if [ "$?" != "0" ]; then exit 1; fi
+	    make install; 			[ $? -ne 0 ] && exit 1
 	    ;;
 
       init)
@@ -54,29 +54,31 @@ case "$1" in
 	    ;;
 
       mod)	echo "Modul forditas..."
-	    make ${MAKE_PARAM} modules;		if [ "$?" != "0" ]; then exit 1; fi
+	    make ${MAKE_PARAM} modules; 	[ $? -ne 0 ] && exit 1
 	    ;;
 
       mi)	echo "Modules Install..."
-	    make modules_install;	if [ "$?" != "0" ]; then exit 1; fi
+	    make modules_install; 		[ $? -ne 0 ] && exit 1
 	    ;;
 
       deb)	echo "Debian csomag készitése..."
-	    make ${MAKE_PARAM} KDEB_PKGVERSION=1 deb-pkg;	if [ "$?" != "0" ]; then exit 1; fi
+	    make ${MAKE_PARAM} KDEB_PKGVERSION=1 deb-pkg; 	[ $? -ne 0 ] && exit 1
 	    ;;
 
       f)	echo "Minden..."
-	    $0 k;			if [ "$?" != "0" ]; then exit 1; fi
-	    $0 mod;			if [ "$?" != "0" ]; then exit 1; fi
-	    $0 mi;			if [ "$?" != "0" ]; then exit 1; fi
-	    $0 init;			if [ "$?" != "0" ]; then exit 1; fi
-	    $0 i;			if [ "$?" != "0" ]; then exit 1; fi
+	    $0 k; 				[ $? -ne 0 ] && exit 1
+	    $0 mod; 				[ $? -ne 0 ] && exit 1
+	    $0 mi; 				[ $? -ne 0 ] && exit 1
+	    $0 init; 				[ $? -ne 0 ] && exit 1
+	    $0 i; 				[ $? -ne 0 ] && exit 1
 	    ;;
 
       *)
-	    echo "Hibás paraméter: /$1-";	exit 1;
+	    echo "Hibás paraméter: /$1-"; 	exit 1;
 esac
     echo "Sikeres..."
 
     shift;
-    if [ ".$*" != "." ]; then	$0 $*;	fi
+    if [ -n ".$*" ]; then
+	$0 $*
+    fi
