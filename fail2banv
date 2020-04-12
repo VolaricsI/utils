@@ -8,6 +8,6 @@
 
 fail2ban-client status|grep -e "- Jail list:" |sed 's/.*Jail list://g; s/,//g; s/ \+/\n/g;' |while read a; do
 
-    echo ""
+#    echo ""
     fail2ban-client status $a |grep -v "Banned IP list:" |grep -e "Status for the jail:" -e "Currently banned:" -e "Total banned:"
 done
