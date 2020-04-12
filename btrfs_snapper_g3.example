@@ -21,7 +21,7 @@
 
 #:::::::: Start :::::::::::::::
     Mode=$1
-    [ ".${Mode}" = "." ] && Mode=${0/*-/} 			# sh esetére:$( basename $0 |sed 's/.*-//g' )
+    [ -z "${Mode}" ] && Mode=${0/*-/} 			# sh esetére:$( basename $0 |sed 's/.*-//g' )
 
 	btrfs_snapper /dev/mapper/vgnotig3-root ${Mode}
 exit $?
