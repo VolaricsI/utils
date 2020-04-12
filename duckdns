@@ -3,7 +3,7 @@
 
 #:::::: Fix beallitasok :::::::
 ##LEIRAS, BESZEDES 					## Exportból érkezik: A domain leírása és az hogy mennyire legyen beszédes ez a script
-#LEIRAS="Update:"$( date +%Y.%m.%d.%H:%M )			## a dig $DOMAIN.duckdnc.org TXT megjeleníti ezt az infót. NEM lehet benne szóköz és vezérlő karakter!!!
+#LEIRAS="Update:"$( date +%Y.%m.%d.%H:%M )			## a dig $DOMAIN.duckdns.org TXT megjeleníti ezt az infót. NEM lehet benne szóköz és vezérlő karakter!!!
 
 BESZEDES_URL="&verbose=true" 					## Ez kell ha beszédes üzemet akarsz
 Curl="/usr/bin/curl -k --silent --connect-timeout 10 " 		## A curl és paraméterezése
@@ -23,16 +23,17 @@ Url="https://www.duckdns.org/update?domains=${Domain}&token=${Token}${Beszedes}"
 
 
 #:::::: Fuggvenyek ::::::::::::
-Update(){ 						## A hibakezelés miatt került fügvénybe
+Update(){ 							## A hibakezelés miatt került fügvénybe
     Result=$( ${Curl} "${Url}$1" )
     Ret=$?
-
-[ $Ret -eq  0 ] && return 0 	## Minden OK
-[ $Ret -eq  6 ] && return 0 	## Couldn't resolve host.
-[ $Ret -eq  7 ] && return 0 	## Failed to connect to host.
-[ $Ret -eq 28 ] && return 0 	## Time out
-
-    echo "===== $Ret =====>\n $Result\n<====" 	## Hiba esetén írja ki a választ is
+    case  $Ret in
+	0|6|7|28) 						## Minden OK; Couldn't resolve host.; Failed to connect to host.; Time out
+		return 0
+		;;
+        *)
+		echo "===== $Ret =====>\n $Result\n<====" 	## Hiba esetén írja ki a választ is
+		;;
+    esac
 }
 
 #:::::::: Start :::::::::::::::
