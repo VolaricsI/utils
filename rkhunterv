@@ -8,15 +8,15 @@
 #:::::: functions :::::::::::::
 #:::::: Start :::::::::::::::::
 
-[ "." != ".$1" ] &&	rkhunter --check --update --versioncheck --sk --propupd
+    [ -n "$1" ] && rkhunter --check --update --versioncheck --sk --propupd
 
-			rkhunter --check --update --versioncheck --sk --rwo
+    rkhunter --check --update --versioncheck --sk --rwo
 
 exit 0
 
 http://serverfault.com/questions/759555/rkhunter-deleted-files-whitelist-issues
 
-csak ennyi és nincs filera nézé (pl):
+csak ennyi és nincs file-ra nézés (pl):
 
 ALLOWPROCDELFILE=/usr/sbin/mysqld
 ALLOWPROCDELFILE=/usr/sbin/apache2
