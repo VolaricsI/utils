@@ -29,4 +29,5 @@ Set(){
 	dfv psv psxv tailv dpkgl fail2banv rkhunterv 	\
 	lcv logcheck-util 				\
 	zfs_snapper btrfs_snapper 			\
-	network-online operavideo refreshclam 
+	network-online operavideo refreshclam 		\
+	torl torl1 TorrentCopy Defrag 
