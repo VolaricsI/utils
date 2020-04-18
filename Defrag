@@ -1,0 +1,21 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+if [ -z "$1" ]; then
+    echo "usage: $0 directory|file"
+    echo "Only btrfs filesystem!!!"
+    exit 0
+fi
+
+    echo "Kiírja azokat amelyeket defragolta a végeredménnyel..."
+
+    find $1 -xdev -type f -exec filefrag {} + |grep -v -e ": [01] extents* found$"  |sed 's|: [0-9]\+ extent.* found||' 	\
+	|while read f; do
+	    btrfs filesystem defragment -fv "$f" 	>/dev/null
+	    filefrag "$f"
+	done
