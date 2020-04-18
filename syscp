@@ -9,9 +9,8 @@ HOVA="/mnt/$SYS_IDE"
 
 #A file-ban ($1) átír mindent $SYS_SOURCE --> $SYS_IDE
 Atiras()
-{
-mv ${HOVA}$1 ${HOVA}$1.${SYS_SOURCE}			1>&2	2>/dev/null
-cat ${HOVA}$1.${SYS_SOURCE}|sed "s/$SYS_SOURCE/$SYS_IDE/g"	>${HOVA}$1
+{	mv ${HOVA}$1 ${HOVA}$1.${SYS_SOURCE}			1>&2	2>/dev/null
+	cat ${HOVA}$1.${SYS_SOURCE}|sed "s/$SYS_SOURCE/$SYS_IDE/g"	>${HOVA}$1
 }
 
 #Csak a könyvtárat hozzuk létre
