@@ -30,6 +30,7 @@ ASyncronizal(){
 	Rt=$[ $( date +%s )  - ${_StartTime} ] 										## Ennyi ideig dolgoztam
 	[ ${Rt} -lt 100 ] && Rt=" ${Rt}" ; [ ${Rt} -lt 10 ] && Rt=" ${Rt}" 						## Az igazítás miatt kell
 	echo "Futási idő (${DEV}): ${Rt} sec." 						>>${LOG_FILE_ASYNC}
+	date "${LOG_FORMAT} Futási idő (${DEV}): ${Rt} sec." 				>>${LOG_FILE_ASYNC}
 	Felszamolas
 }
 
