@@ -1,0 +1,97 @@
+#!/bin/bash
+#	Created by Volarics Istvan by Voli
+
+## Az okosságom forrása: https://www.tbsiptv.com/index.php?route=product/download/drivers&path=download/tbs6590/tbs6590_multi_standard_dual_tuner_dual_ci_pcie_card_data_sheet.pdf&id=39
+
+#:::::: Fix beallitasok :::::::
+DIR=/usr/src/tbsdriver
+
+FW_URL="http://www.tbsdtv.com/download/document/linux/"
+FW_FILE="tbs-tuner-firmwares_v1.0.tar.bz2"
+
+MAKE_PARAM=" -j 4 "		#Több szálu forditas
+
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+Dir_save(){
+	SavePath=$( pwd )
+	[ ! -e $DIR ] && mkdir -p $DIR
+	cd $DIR
+}
+Dir_restore(){
+	cd $SavePath
+}
+
+do_full(){
+    Dir_save
+    echo "Mindent törlök, majd letöltöm a forrásokat..."
+    rm -rf ./media ./media_build
+    git clone https://github.com/tbsdtv/media_build.git
+    git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media
+    echo "És akkor a fordítás..."
+    cd media_build ; 		[ $? -ne 0 ] && exit 1
+    make dir DIR=../media ; 	[ $? -ne 0 ] && exit 2
+    make distclean ; 		[ $? -ne 0 ] && exit 3
+    make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 4
+    echo "Install..."
+    sudo make install
+    Dir_restore
+}
+do_update(){
+    Dir_save
+    echo "Kitakarítjuk a forrást..."
+    cd media_build ; 		[ $? -ne 0 ] && exit 8
+    make distclean ; 		[ $? -ne 0 ] && exit 9
+    cd ..
+
+    echo "Frissítés a netről..."
+    cd ./media ; 		[ $? -ne 0 ] && exit 5
+    git remote update ; 	[ $? -ne 0 ] && exit 6
+    git pull ; 			[ $? -ne 0 ] && exit 7
+    cd ../media_build ; 	[ $? -ne 0 ] && exit 8
+    make distclean ; 		[ $? -ne 0 ] && exit 9
+    git remote update ; 	[ $? -ne 0 ] && exit 10
+    git pull ; 			[ $? -ne 0 ] && exit 11
+    echo "Alaphalyzetbe hozás, majd fordítás..."
+    make distclean ; 		[ $? -ne 0 ] && exit 12
+    make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 13
+    echo "Install..."
+#    sudo make install
+    Dir_restore
+}
+do_firmware(){
+    Dir_save
+    [ -e $FW_FILE ] && rm $FW_FILE
+    wget "${FW_URL}${FW_FILE}"
+    tar jxvf "${FW_FILE}" -C /lib/firmware/
+    Dir_restore
+}
+do_teszt(){
+	dmesg | grep frontend
+	dmesg |grep TBS |sed 's/.*\]//'|sort -u
+
+}
+
+#:::::::: Start :::::::::::::::
+echo ">>>>>>> Minden esetben CSAK az aktuális kernel-hez csinálja <<<<<<<"
+case "$1" in
+	f|F)
+	    do_full
+	;;
+	u|U)
+	    do_update
+	;;
+	t|T)
+	    do_teszt
+	;;
+	w|W)
+	    do_firmware
+	;;
+      *)
+	    echo "Usage: $0 [(f)ull|(U)pdate]|(T)eszt"
+	    echo "	Full: 	Mindent eltakarít, letölti a netről, fordítja, és telepíti."
+	    echo "	Update:	Frissít a netről, fordítja, és telepíti."
+	    echo "	firm(w)are: A firmware-t telepíti."
+	    echo "	Teszt:	Kernel logot iratki a TBS-ről."
+	exit 1;
+esac
