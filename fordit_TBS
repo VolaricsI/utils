@@ -56,7 +56,7 @@ do_update(){
     make distclean ; 		[ $? -ne 0 ] && exit 12
     make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 13
     echo "Install..."
-#    sudo make install
+    sudo make install
     Dir_restore
 }
 do_firmware(){
@@ -69,7 +69,6 @@ do_firmware(){
 do_teszt(){
 	dmesg |grep -e si2183 -e si2157 -e frontend
 	dmesg |grep TBS |sed 's/.*\]//'|sort -u
-
 }
 
 #:::::::: Start :::::::::::::::
@@ -81,17 +80,17 @@ case "$1" in
 	u|U)
 	    do_update
 	;;
-	t|T)
-	    do_teszt
-	;;
 	w|W)
 	    do_firmware
+	;;
+	t|T)
+	    do_teszt
 	;;
       *)
 	    echo "Usage: $0 [(f)ull|(U)pdate]|(T)eszt"
 	    echo "	Full: 	Mindent eltakarít, letölti a netről, fordítja, és telepíti."
 	    echo "	Update:	Frissít a netről, fordítja, és telepíti."
-	    echo "	firm(w)are: A firmware-t telepíti."
-	    echo "	Teszt:	Kernel logot iratki a TBS-ről."
+	    echo "	firm(w)are: 	A firmware-t telepíti."
+	    echo "	(T)eszt: 	Kernel logot iratki a TBS-ről."
 	exit 1;
 esac
