@@ -30,4 +30,4 @@ Set(){
 	lcv logcheck-util 				\
 	zfs_snapper btrfs_snapper 			\
 	network-online operavideo refreshclam 		\
-	torl torl1 TorrentCopy Defrag 
+	torl torl1 TorrentCopy Defrag fordit_TBS 

@@ -67,7 +67,7 @@ do_firmware(){
     Dir_restore
 }
 do_teszt(){
-	dmesg | grep frontend
+	dmesg |grep -e si2183 -e si2157 -e frontend
 	dmesg |grep TBS |sed 's/.*\]//'|sort -u
 
 }
