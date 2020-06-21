@@ -5,6 +5,8 @@
 
 #:::::: Fix beallitasok :::::::
 DIR=/usr/src/tbsdriver
+FILE_FIND=FindFile.lst
+FILE_CSERE=Csere.lst
 
 FW_URL="http://www.tbsdtv.com/download/document/linux/"
 FW_FILE="tbs-tuner-firmwares_v1.0.tar.bz2"
@@ -15,64 +17,102 @@ MAKE_PARAM=" -j 4 "		#Több szálu forditas
 #:::::: Fuggvenyek ::::::::::::
 Dir_save(){
 	SavePath=$( pwd )
-	[ ! -e $DIR ] && mkdir -p $DIR
-	cd $DIR
+	[ ! -e $DIR ] && mkdir -p $DIR ; 	[ $? -ne 0 ] && exit 1
+	cd $DIR ; 				[ $? -ne 0 ] && exit 2
 }
 Dir_restore(){
 	cd $SavePath
 }
 
-do_full(){
-    Dir_save
+Letoltes(){
     echo "Mindent törlök, majd letöltöm a forrásokat..."
-    rm -rf ./media ./media_build
-    git clone https://github.com/tbsdtv/media_build.git
-    git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media
+    cd $DIR ; 										[ $? -ne 0 ] && exit 1
+    rm -rf ./media ./media_build ${FILE_FIND} ${FILE_CSERE} 	2>&1 1>/dev/null
+    git clone https://github.com/tbsdtv/media_build.git ; 				[ $? -ne 0 ] && exit 2
+    git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media ; 	[ $? -ne 0 ] && exit 3
+    rm -rf ./media/.git ./media_build/.git
+}
+Forditas(){
     echo "És akkor a fordítás..."
-    cd media_build ; 		[ $? -ne 0 ] && exit 1
+    cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
     make dir DIR=../media ; 	[ $? -ne 0 ] && exit 2
     make distclean ; 		[ $? -ne 0 ] && exit 3
     make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 4
-    echo "Install..."
-    sudo make install
-    Dir_restore
 }
-do_update(){
-    Dir_save
-    echo "Kitakarítjuk a forrást..."
-    cd media_build ; 		[ $? -ne 0 ] && exit 8
-    make distclean ; 		[ $? -ne 0 ] && exit 9
-    cd ..
+Install(){
+    echo "Install..."
+    cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
+    sudo make install ; 	[ $? -ne 0 ] && exit 11
+}
+VerzioCsere(){			## $1: A verzió, pl.: '5.4.0-38-generic'
+    cd $DIR ; 	[ $? -ne 0 ] && exit 1
+    find . |grep -v "/Documentation/" |sort |while read fn; do
+	[ -d $fn ] && continue
 
-    echo "Frissítés a netről..."
-    cd ./media ; 		[ $? -ne 0 ] && exit 5
-    git remote update ; 	[ $? -ne 0 ] && exit 6
-    git pull ; 			[ $? -ne 0 ] && exit 7
-    cd ../media_build ; 	[ $? -ne 0 ] && exit 8
-    make distclean ; 		[ $? -ne 0 ] && exit 9
-    git remote update ; 	[ $? -ne 0 ] && exit 10
-    git pull ; 			[ $? -ne 0 ] && exit 11
-    echo "Alaphalyzetbe hozás, majd fordítás..."
-    make distclean ; 		[ $? -ne 0 ] && exit 12
-    make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 13
-    echo "Install..."
-    sudo make install
+	grep  -c "uname -r" $fn >/dev/null ; Ret=$?
+	[ ${Ret} -ne 0 ] && continue
+
+	echo ">>>>>>>>>>>>>>>>>>>$fn<<<<<<<<"
+	echo "$fn" 	>>${FILE_FIND}
+	grep -e "uname -r"  $fn
+	echo "------------------------------"
+
+	sed -i "s/\$(shell uname -r |/\$(shell echo $1 |/g" 	$fn
+	sed -i "s/\$(shell uname -r)/$1/g" 				$fn
+	sed -i "s/\$(shell,uname -r)/$1/g" 				$fn
+
+	sed -i "s/\$(uname -r |/\$(echo $1 |/g" 	$fn
+	sed -i "s/\$(uname -r)/$1/g" 			$fn
+
+	sed -i "s/@uname -r|/@echo $1|/" 		$fn
+	sed -i "s/\`uname -r\`/$1/g" 			$fn
+	sed -i "s/'uname -r'/$1/g" 			$fn
+
+	grep -e "$1" -e "uname -r" $fn 		## Mi lett a csere után
+    done |tee -a ${FILE_CSERE}
+}
+Verzio(){
+    if [ -z $1 ]; then echo "Nincs megadva a verzió amire fordítsak"; 			exit 1; fi
+    if [ ! -e /lib/modules/$1 ]; then 	echo "Nincs ilyen ($1) kernel verzió..."; 	exit 2; fi
+
+    DIR=$DIR/$1
+    [ ! -e ${DIR} ] && mkdir ${DIR}
+
+    Letoltes
+    VerzioCsere $1
+    Forditas
+    Install
     Dir_restore
 }
+
 do_firmware(){
     Dir_save
     [ -e $FW_FILE ] && rm $FW_FILE
-    wget "${FW_URL}${FW_FILE}"
-    tar jxvf "${FW_FILE}" -C /lib/firmware/
+    wget "${FW_URL}${FW_FILE}" ; 		[ $? -ne 0 ] && exit 1
+    tar jxvf "${FW_FILE}" -C /lib/firmware/ ; 	[ $? -ne 0 ] && exit 2
     Dir_restore
 }
 do_teszt(){
 	dmesg |grep -e si2183 -e si2157 -e frontend
 	dmesg |grep TBS |sed 's/.*\]//'|sort -u
 }
+do_full(){
+    Dir_save
+    Letoltes
+    Forditas
+    Install
+    Dir_restore
+}
+do_Verzio(){
+    if [ -z "$1" ]; then
+	echo "A második paraméterben meg kell adni a verziót..."
+	echo "úgy ahogy azt az 'uname -r' írja ki. pl: '5.4.0-38-generic'."
+	exit 1
+    fi
+    Verzio $1
+}
 
 #:::::::: Start :::::::::::::::
-echo ">>>>>>> Minden esetben CSAK az aktuális kernel-hez csinálja <<<<<<<"
 case "$1" in
 	f|F)
 	    do_full
@@ -86,11 +126,14 @@ case "$1" in
 	t|T)
 	    do_teszt
 	;;
+	v|V)
+	    do_Verzio $2
+	;;
       *)
-	    echo "Usage: $0 [(f)ull|(U)pdate]|(T)eszt"
-	    echo "	Full: 	Mindent eltakarít, letölti a netről, fordítja, és telepíti."
-	    echo "	Update:	Frissít a netről, fordítja, és telepíti."
-	    echo "	firm(w)are: 	A firmware-t telepíti."
+	    echo "Usage: $0 t|w|f|v [a konkrét verzió]"
 	    echo "	(T)eszt: 	Kernel logot iratki a TBS-ről."
+	    echo "	firm(w)are: 	A firmware-t telepíti."
+	    echo "	Full: 		Az aktuális kernelhez, letölti a netről, fordítja, és telepíti."
+	    echo "	(V)erzio a_verzio_amire_forditani_akasz. A megadott vrzióra fordit."
 	exit 1;
 esac
