@@ -7,7 +7,7 @@
 
     export BTRFS_SNAP_time="Barmi_lehet" 		## Kiírja a futási időt
     export BTRFS_SNAP_log="Barmi_lehet" 		## Naplózza a futási időt (/var/log/btrfs_snapper.log)
-    export BTRFS_ASYNC=200 				## Az fs syncronizálása ennyi mp múlva fog megtörténni; Nincs akkor azonnal
+    export BTRFS_NOSYNC="Bármi lehet" 			## Az fs syncronizálása nem lesz kikényszerítve
 
     export  NEMKELL_oras="@.tmp @.home "				## Mely kötetekről nem kell pillanatkép
     export  NEMKELL_heti="@.tmp @.home @.usr.src "
