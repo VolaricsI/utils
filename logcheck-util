@@ -2,165 +2,150 @@
 #	Created by Volarics Istvan by Voli
 
 #:::::: Fix beallitasok :::::::
-SAJAT_MINTA_ELOTAG=Voli_
-MUNKA_DIR=/tmp/lc
-LC_CFG_LOGFILE=/etc/logcheck/logcheck.logfiles
-LC_CFG_MINTAK="/etc/logcheck/ignore.d.server*"
-LC_CFG_LIB=/var/lib/logcheck
+MINTA_FILE_ELOTAG=Voli_
+DIR_MUNKA=/tmp/lc
+
+LIB_DIR=/var/lib/logcheck
+LOGFILE_LISTA=/etc/logcheck/logcheck.logfiles
+KIVETELEK_DIR=/etc/logcheck/ignore.d.server
+
 #:::::: Beallitasok :::::::::::
-LOGS=1_minden_log
-LOGS_SZURT_FILE=1_marad_log
-MINTA_ORIG=minta_orig
-MINTA=minta_sajat
-MINTA_UJ=${MINTA}_uj
-SPLIT_ELOTAG=Mintak_
+DIR_KIVETELEK=${DIR_MUNKA}/Regi
+DIR_KIVETELEK_UJ=${DIR_MUNKA}/Uj
 
-TMP_egyedi=$MUNKA_DIR/e
-#:::::: Fuggvenyek ::::::::::::
-Logok_ossze_gyujtese(){
+KIVETELEK_GYARI_FILE=${DIR_MUNKA}/Kivetelek_gyari
+KIVETELEK_SAJAT_FILE=${DIR_MUNKA}/Kivetelek_sajat
+LOG_MIND=${DIR_MUNKA}/Minden.log
+LOG_NO_GYARI=${DIR_MUNKA}/MindenNoGyari.log
+LOG_NO_SAJAT=${DIR_MUNKA}/MindenNoGyariNoSajat.log
+LOG_BOOT_KERNEL=${DIR_MUNKA}/boot-tol_kernel.log
+TmpFile=${DIR_MUNKA}/kivetel.tmp
+
+#:::::: Fuggvenyek :::::::::::: BELSŐ
+Logok_egybe(){
     echo "A logok összegyüjtése..."
-    mkdir -p $MUNKA_DIR/tmp
-    cat $LC_CFG_LOGFILE|grep -v "^#"|while read a; do
-	cp $a* $MUNKA_DIR/tmp
+    [ ! -e $DIR_MUNKA/tmp ] && mkdir -p $DIR_MUNKA/tmp
+    rm $DIR_MUNKA/tmp/* >/dev/null 2>&1
+    mkdir -p $DIR_MUNKA/tmp
+    cat $LOGFILE_LISTA|grep -v "^#"|while read a; do
+	cp $a* $DIR_MUNKA/tmp/
     done
-    cd $MUNKA_DIR
-    gzip -d 	./tmp/*.gz
-    cat 	./tmp/* |sort -u >$LOGS
+    gzip -d 	$DIR_MUNKA/tmp/*.gz
+    cat 	$DIR_MUNKA/tmp/* |sort -u >$LOG_MIND
 }
-
-Mintak_sajat_gyujtese(){
-    echo "Saját minták összegyüjtése..."
-    [ -e $MINTA.tmp ] && rm $MINTA.tmp
-    find /etc/logcheck |grep "$SAJAT_MINTA_ELOTAG" |while read a; do
-	echo "" 	>>$MINTA.tmp
-	cat $a 		>>$MINTA.tmp
+Kivetelek_sajat_egy_helyre(){
+    [ ! -e $DIR_KIVETELEK    ] && mkdir $DIR_KIVETELEK
+    [ ! -e $DIR_KIVETELEK_UJ ] && mkdir $DIR_KIVETELEK_UJ
+    echo "Regi minták összegyüjtése..."
+    find /etc/logcheck |grep -e "$MINTA_FILE_ELOTAG" |while read a; do
+	cp "$a" "$DIR_KIVETELEK/"
     done
-    sort -u $MINTA.tmp |grep "." 	>$MINTA
-    rm $MINTA.tmp
+}
+Kivetelek_sajat_egybe(){
+    echo "Sajat kivételek egy file-ba..."
+    [ ! -e $DIR_MUNKA ] && mkdir -p $DIR_MUNKA
+    find ${KIVETELEK_DIR} |grep "$MINTA_FILE_ELOTAG" |sort |while read f ; do
+	[ -d "$f" ] && continue
+	cat "$f"
+    done |grep -v -e "^#" -e "^$" |sort -u >${KIVETELEK_SAJAT_FILE}
+}
+Kivetelek_gyari_egybe(){
+    echo "Gyári kivételek egy file-ba..."
+    find ${KIVETELEK_DIR} |grep -v "$MINTA_FILE_ELOTAG" |sort |while read f ; do
+	[ -d "$f" ] && continue
+	cat "$f"
+    done |grep -v -e "^#" -e "^$" |sort -u >${KIVETELEK_GYARI_FILE}
 }
 
-Mintak_orig_Keszites(){
-    echo "Az eredeti minták összeállítása..."
-    [ -e $MINTA_ORIG.tmp ] && rm $MINTA_ORIG.tmp
-    find $LC_CFG_MINTAK |grep -v $SAJAT_MINTA_ELOTAG |while read a; do
-	[ ! -f $a ] && continue
-	cat $a |grep -v -e "^#"	>>$MINTA_ORIG.tmp
-    done
-    sort -u $MINTA_ORIG.tmp |grep "." 	>$MINTA_ORIG
-    [ -e $MINTA_ORIG.tmp ] && rm $MINTA_ORIG.tmp
-}
 
-Logok_no_orig(){
-    echo "Az eredeti mintákkal szürt log..."
-    [ ! -f ${LOGS}.mind ] && mv ${LOGS} ${LOGS}.mind
-    grep -v  -E --text -f ${MINTA_ORIG} 	$LOGS.mind |tee $LOGS
-}
 
-Mintak_szurese(){
-    echo "Ezek a minták aktívak: ${MINTA_UJ}..."
-    [ -e ${MINTA_UJ} ] && rm ${MINTA_UJ}
-    split -l 1 $MINTA $SPLIT_ELOTAG
 
-    ls ${SPLIT_ELOTAG}* |while read a; do
-	Ret=$(grep -E --text -c  -f $a $LOGS )
-	echo -n "$Ret: 	"; cat "$a"
-	if [ ".$Ret" != ".0" ]; then
-	    cat $a >>${MINTA_UJ}
-	else
-	    cat $a >>${MINTA}.nemvolt
-	fi
-	rm $a
-    done
-    echo "Amit nem szürtünk ki: ${LOGS_SZURT_FILE}..."
-    grep -v -E --text -f $MINTA_UJ $LOGS |tee $LOGS_SZURT_FILE
-}
-
-do_check(){
-    echo "Teljes ellenörzés...";
-    start_dir=$( pwd )
-    mkdir -p $MUNKA_DIR/tmp
-    cd $MUNKA_DIR
-
-	Logok_ossze_gyujtese
-	Mintak_sajat_gyujtese
-	Mintak_orig_Keszites
-	Logok_no_orig
-	Mintak_szurese
-
-    echo "A dátum és gépnév kiszedése..."
-	sed 's/^.\{3\} .\{11\} [._[:alnum:]-]\+ //g;' 	$LOGS_SZURT_FILE |sort -u 	>$LOGS_SZURT_FILE.1
-    echo "A process pid-jének lecserélés..."
-	sed 's/\[[0-9]\+\]:/\[XXXX\]:/g;' 		$LOGS_SZURT_FILE.1 |sort -u 	>$LOGS_SZURT_FILE.2
-
-    chown -R root:logcheck $MUNKA_DIR
-    cd $start_dir
-}
-
+#:::::: Fuggvenyek ::::::::::::
 do_mail(){
     echo "Levél küldése..."; 
     sudo -u logcheck logcheck
 }
-do_uj_mail(){
+do_mail_uj(){
     echo "A teljes log-ra levél küldés..."
-    rm $LC_CFG_LIB/*
+    rm $LIB_DIR/*
     sudo -u logcheck logcheck
 }
-
-do_uj_kivetelek(){
-    mkdir -p $TMP_egyedi
-    cd $TMP_egyedi ; rm $TMP_egyedi/*
-    find /etc/logcheck |grep "$SAJAT_MINTA_ELOTAG" |while read a; do
-	echo "$a"
-	f=$( basename $a )
-	grep  "." $a >$f.regi
-	split -l 1    $f.regi $SPLIT_ELOTAG
-
-	ls ${SPLIT_ELOTAG}* |while read b; do
-	    Ret=$(grep -E --text -c  -f $b ../$LOGS )
-	    echo -n "$Ret: 	"; cat "$b"
-	    if [ ".$Ret" != ".0" ]; then
-		cat $b >>$f
-	    else
-		cat $b >>$f.nemvolt
-	    fi
-	    rm $b
+do_aktiv(){
+    echo "A saját (${MINTA_FILE_ELOTAG}) előtaguakból, csak az marad meg amelyik érvényes sort tartalmaz..."
+    echo "Itt fogod megtalálni az új mintákat tartalmazó file-okat: >>${DIR_KIVETELEK_UJ}<<"
+    Logok_egybe
+    Kivetelek_sajat_egy_helyre
+    echo "Az eggyes file-ok feldolgozása..."
+    ls $DIR_KIVETELEK/ |while read fname; do
+	echo "===>> $fname"
+	[ -e "${DIR_KIVETELEK_UJ}/${fname}" ] && rm  "${DIR_KIVETELEK_UJ}/${fname}"
+	cat "${DIR_KIVETELEK}/${fname}" |sed 's|\\|\\\\|g' |while read sor; do
+	    [ -z "$sor" ] && echo "" >>"${DIR_KIVETELEK_UJ}/${fname}"
+	    [ -z "$sor" ] && continue
+	    echo  "$sor"  >${TmpFile}
+	    grep -c -E -f ${TmpFile} $LOG_MIND >/dev/null
+	    [ $? -ne 0 ] && continue
+	    echo  "$sor" >>"${DIR_KIVETELEK_UJ}/${fname}"
 	done
-
-	diff $f.regi $f 	>/dev/null 2>&1
-	[ $? -eq 0 ] && ( rm $f $f.regi $f.nemvolt >/dev/null 2>&1 )
-
-	diff $f.regi $f.nemvolt 	>/dev/null 2>&1
-	[ $? -eq 0 ] && ( rm $f $f.regi >/dev/null 2>&1 )
-
+	[ ! -e "${DIR_KIVETELEK_UJ}/${fname}" ] && continue 		## Csak üres sorokat tartalmazókat töröljük
+	grep -c -v -e "^$" "${DIR_KIVETELEK_UJ}/${fname}" 	>/dev/null
+	[ $? -eq 1 ] && rm "${DIR_KIVETELEK_UJ}/${fname}"
     done
-    chown -R root:logcheck $TMP_egyedi
+    chown root:logcheck ${DIR_KIVETELEK_UJ}/*
+    [ -e ${TmpFile} ] && rm ${TmpFile}
+}
+do_nem_szurt(){
+    echo "Azokat a sorokat írja ki a log-okból melyeket nem szürtünk ki..."
+    Logok_egybe
+    Kivetelek_gyari_egybe
+    Kivetelek_sajat_egybe
+    echo "A logok-ból kiszedem a gyári mintákat..."
+    grep -v -E -f ${KIVETELEK_GYARI_FILE} ${LOG_MIND} >${LOG_NO_GYARI}
+    echo "A logok-ból kiszedett gyári minták után a sajátokat is kitakarítom..."
+    grep -v -E -f ${KIVETELEK_SAJAT_FILE} ${LOG_NO_GYARI} >${LOG_NO_SAJAT}
+    echo "Az időbélyeget lecserélve, az azonosakat kiszürve..."
+    sed 's|^.\{15\}|Abc 00 00:00:00|; s|\[[0-9]\+\]|\[0230\]| ' ${LOG_NO_SAJAT} |sort -u >${LOG_NO_SAJAT}_
 }
 
 #:::::::: Start :::::::::::::::
 
+do_kernel_boot(){
+    echo "A boot-tól eltelt kernel üzenetek szürve a saját kivételekkel ==> kivétel készítése, hogy mind benne legyen"
+    Kivetelek_sajat_egybe
+    journalctl -b |grep -e '^\w\{3\} [ :0-9]\{11\} [._[:alnum:]-]\+ kernel:' 	>$LOG_BOOT_KERNEL
+echo 11111
+    grep -v -E -f ${KIVETELEK_SAJAT_FILE} $LOG_BOOT_KERNEL 		>${LOG_BOOT_KERNEL}.1
+echo 22222
+    sed 's|^.\{16\}||' ${LOG_BOOT_KERNEL}.1 >${LOG_BOOT_KERNEL}.2
+echo 33333
+    sort -u ${LOG_BOOT_KERNEL}.2 >${LOG_BOOT_KERNEL}.3
 
-##echo ............; read a; exit 0
+}
+
+
+#do_kernel_boot
+#echo ............; read a; exit 0
 
 case "$1" in
-	check)
-	    do_check
-	;;
 	mail)
 	    do_mail
 	;;
 	mail-uj)
-	    do_uj_mail
+	    do_mail_uj
 	;;
-	sajat-uj)
-	    do_uj_kivetelek
+	aktiv)
+	    do_aktiv
 	;;
 
+	szuretlen)
+	    do_nem_szurt
+	;;
       *)
 	echo "$0 [check|mail|mail-uj|sajat-uj]"
 	echo ""
-	echo "check: 	készít: 1. melyek az aktív általad írt kivételek; 2. melyek azok a sorok amik nincsenek szűrve."
 	echo "mail: 	lefuttatja a logcheck-et."
 	echo "mail-uj: 	Letörli a jelölést, hogy meddig volt az ellenenőrzés, és le futtatja a logcheck-et."
-	echo "sajat-uj: Új saját kivételek gyártása a $TMP_egyedi könyvtárba."
+	echo "aktiv: 	A \"${DIR_KIVETELEK_UJ}\" könyvtárba a régi kivételekből azokat teszi amelyek MOST adnak találatot."
+	echo "szuretlen: Azok a sorok maradnak amelyekre ninvs szűrés,"
 	echo ""
 esac
