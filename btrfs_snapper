@@ -4,7 +4,6 @@
 #:::::: Fix beallitasok :::::::
 SNAP_DIR=SnapShot 					## Ebben a könyvtárban kerülnek tárolásra a pillanatképek
 LOG_FILE=/var/log/btrfs_snapper.log			## Ide készül napló ha kérted
-LOG_FILE_ASYNC=/var/log/btrfs_snapper_async.log			## Ide készül napló ha kérted
 LOG_FORMAT="+%Y.%m.%d. %R:%S ==> " 			## Az időbélyegek formája
 #:::::: Beallitasok :::::::::::
 DEV=$1							## Melyik meghajtóval foglalkozunk
@@ -14,24 +13,16 @@ DIR="/mnt/${DEV_Neve}" 					## Ide történik a felcsatolás
 
 Felszamolas(){ 														## Felszámolom a környezetet
 	umount ${DIR}; mountpoint -q ${DIR} ; Ret=$?
-	if [ $Ret -eq 0 ] ; then
-	    echo "A csatolás még létezik!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 			>>${LOG_FILE}
-	    echo "A csatolás még létezik!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 			>>${LOG_FILE_ASYNC}
+	  if [ $Ret -ne 0 ] ; then
+		rmdir  ${DIR}
+	else
+		echo "A csatolás még létezik!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 	>>${LOG_FILE}
 	fi
-	[ $Ret -ne 0 ] && rmdir  ${DIR}
 }
 
-ASyncronizal(){
-	date "${LOG_FORMAT} Kezdés: ${DEV}: várakozási idő (${BTRFS_ASYNC})." 		>>${LOG_FILE_ASYNC}
-	sleep ${BTRFS_ASYNC}
-	_StartTime=$( date +%s )											## Kell a futási idő számításhoz
-	btrfs subvolume sync ${DIR} 							>>${LOG_FILE_ASYNC} 		## A változásokat kiszinkronizálom
-	date "${LOG_FORMAT} subvolsync vége" 						>>${LOG_FILE_ASYNC} 		## Itt a vége
-	Rt=$[ $( date +%s )  - ${_StartTime} ] 										## Ennyi ideig dolgoztam
-	[ ${Rt} -lt 100 ] && Rt=" ${Rt}" ; [ ${Rt} -lt 10 ] && Rt=" ${Rt}" 						## Az igazítás miatt kell
-	echo "Futási idő (${DEV}): ${Rt} sec." 						>>${LOG_FILE_ASYNC}
-	date "${LOG_FORMAT} Futási idő (${DEV}): ${Rt} sec." 				>>${LOG_FILE_ASYNC}
-	Felszamolas
+Szinkronizal(){
+	btrfs subvolume sync ${DIR} 			>>${LogFile}							## A változásokat kiszinkronizálom
+	date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}							## Itt a vége
 }
 
 case ${MODE} in
@@ -96,20 +87,17 @@ esac
 	done 						>>${LogFile}
 	date "${LOG_FORMAT} Ami nem kell az törölve" 	>>${LogFile}
 
-	if [ -z "${BTRFS_ASYNC}" ]; then
-		btrfs subvolume sync ${DIR} 			>>${LogFile}							## A változásokat kiszinkronizálom
-		date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}							## Itt a vége
+	if [ -n "${BTRFS_NOSYNC}" ]; then										## Most elmarad a szinkronizálás
+	    date "${LOG_FORMAT} Nincs kényszerített szinkronizálás" 		>>${LogFile}
 	else
-		ASyncronizal &
+	    Szinkronizal
 	fi
 
-
-
-	RunTime=$[ $( date +%s )  - ${StartTime} ] 									## Ennyi ideig dolgoztam
+	RunTime=$[ $( date +%s ) - ${StartTime} ] 									## Ennyi ideig dolgoztam
 	[ ${RunTime} -lt 100 ] && RunTime=" ${RunTime}" ; [ ${RunTime} -lt 10 ] && RunTime=" ${RunTime}" 		## Az igazítás miatt kell
 	echo "Futási idő: ${RunTime} sec."		>>${LogFile}
 
-#	[ -z "${BTRFS_ASYNC}" ] && Felszamolas 										## ASYNC esetén nem szabad
+	Felszamolas
 
 	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 							## Csak tesztelés idejére
 	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d. %H:%M:%S ==> ${DEV}(${MODE}): 	${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
