@@ -4,6 +4,9 @@
 ## Az okosságom forrása: https://www.tbsiptv.com/index.php?route=product/download/drivers&path=download/tbs6590/tbs6590_multi_standard_dual_tuner_dual_ci_pcie_card_data_sheet.pdf&id=39
 
 #:::::: Fix beallitasok :::::::
+MAKE_PARAM=" -j 4 "		#Több szálu forditas
+
+#:::::: Beallitasok :::::::::::
 DIR=/usr/src/tbsdriver
 FILE_FIND=FindFile.lst
 FILE_CSERE=Csere.lst
@@ -11,9 +14,6 @@ FILE_CSERE=Csere.lst
 FW_URL="http://www.tbsdtv.com/download/document/linux/"
 FW_FILE="tbs-tuner-firmwares_v1.0.tar.bz2"
 
-MAKE_PARAM=" -j 4 "		#Több szálu forditas
-
-#:::::: Beallitasok :::::::::::
 #:::::: Fuggvenyek ::::::::::::
 Dir_save(){
 	SavePath=$( pwd )
@@ -44,6 +44,7 @@ Install(){
     cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
     sudo make install ; 	[ $? -ne 0 ] && exit 11
 }
+
 VerzioCsere(){			## $1: A verzió, pl.: '5.4.0-38-generic'
     cd $DIR ; 	[ $? -ne 0 ] && exit 1
     find . |grep -v "/Documentation/" |sort |while read fn; do
@@ -85,18 +86,24 @@ Verzio(){
     Dir_restore
 }
 
-do_firmware(){
+do_teszt(){
+	dmesg |grep -e si2183 -e si2157 -e frontend
+	dmesg |grep TBS |sed 's/.*\]//'|sort -u
+}
+do_Delete(){
+    ls  $DIR|while read fn; do
+	echo "$fn";
+	echo rm -rf $DIR/$fn
+    done
+}
+do_Firmware(){
     Dir_save
     [ -e $FW_FILE ] && rm $FW_FILE
     wget "${FW_URL}${FW_FILE}" ; 		[ $? -ne 0 ] && exit 1
     tar jxvf "${FW_FILE}" -C /lib/firmware/ ; 	[ $? -ne 0 ] && exit 2
     Dir_restore
 }
-do_teszt(){
-	dmesg |grep -e si2183 -e si2157 -e frontend
-	dmesg |grep TBS |sed 's/.*\]//'|sort -u
-}
-do_full(){
+do_Full(){
     Dir_save
     Letoltes
     Forditas
@@ -117,26 +124,27 @@ do_Verzio(){
 
 #:::::::: Start :::::::::::::::
 case "$1" in
-	f|F)
-	    do_full
-	;;
-	u|U)
-	    do_update
-	;;
-	w|W)
-	    do_firmware
-	;;
 	t|T)
 	    do_teszt
+	;;
+	d|d)
+	    do_Delete
+	;;
+	w|W)
+	    do_Firmware
+	;;
+	f|F)
+	    do_Full
 	;;
 	v|V)
 	    do_Verzio $2
 	;;
       *)
-	    echo "Usage: $0 t|w|f|v [a konkrét verzió]"
+	    echo "Usage: $0 t|w|f|v|d [a konkrét verzió]"
 	    echo "	(T)eszt: 	Kernel logot iratki a TBS-ről."
-	    echo "	firm(w)are: 	A firmware-t telepíti."
-	    echo "	Full: 		Az aktuális kernelhez, letölti a netről, fordítja, és telepíti."
+	    echo "	(D)elete: 	Letörli a rorrásokat és fordításokat."
+	    echo "	(F)ull: 	Az aktuális kernelhez, letölti a netről, fordítja, és telepíti."
+	    echo "	firm(W)are: 	A firmware-t telepíti."
 	    echo "	(V)erzio a_verzio_amire_forditani_akasz. A megadott vrzióra fordit."
 	exit 1;
 esac
