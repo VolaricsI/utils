@@ -107,6 +107,9 @@ do_Verzio(){
     if [ -z "$1" ]; then
 	echo "A második paraméterben meg kell adni a verziót..."
 	echo "úgy ahogy azt az 'uname -r' írja ki. pl: '5.4.0-38-generic'."
+	echo ""
+	echo " A lehetséges verziók listája:"
+	ls  /boot|grep vmlinuz |sed 's/^vmlinuz-/\t/'
 	exit 1
     fi
     Verzio $1
