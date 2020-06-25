@@ -92,8 +92,7 @@ do_teszt(){
 }
 do_Delete(){
     ls  $DIR|while read fn; do
-	echo "$fn";
-	echo rm -rf $DIR/$fn
+	rm -rf $DIR/$fn
     done
 }
 do_Firmware(){
