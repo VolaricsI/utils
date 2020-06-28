@@ -1,0 +1,75 @@
+#!/bin/bash
+#	Created by Volarics Istvan (Voli)
+
+#:::::: Fix beallitasok :::::::
+BACKUP_DIR=/srv/mythTV/epg_backup
+BACKUP_FILE_MAX=16
+
+GRAB_DAYS=8
+
+SOURCE_ID_MAX=2
+EPG_ELOZO_NAPOK=1
+
+XML=/tmp/EPG_huro.xml 		## A grab eredménye ide kerül
+
+#:::::: Beallitasok :::::::::::
+MYTH_CONFIGDB=/etc/mythtv/config.xml 					## MythTV DB hozzáférésének adatai
+DBPassword=$( grep -e "Password" ${MYTH_CONFIGDB} |sed 's/<\/.*>//g; s/<.*>//g; s/^ \+//g;' )
+MySQL="mysql -h localhost -D mythconverg -u mythtv  -p${DBPassword}" 	## Ezzel kezeljük az adatbázist.
+
+#:::::: Fuggvenyek ::::::::::::
+DB_Takaritas(){
+	echo "Adatbázis takarítás... Az utolso film kezdési idő..."
+	(
+		## Az EIT cache törlése
+	echo 'TRUNCATE TABLE eit_cache;'
+
+		## A web coocke törlése, az 1 hónál régebbi már valseg nem kell
+	echo "delete FROM mythweb_sessions  WHERE modified < now() - interval 1 month " 	|${MySQL}
+
+		## A Régebbi EPG bejegyzések tölése
+	echo "DELETE  FROM \`program\` WHERE \`starttime\` <= DATE_SUB( now(), INTERVAL ${EPG_ELOZO_NAPOK} DAY);"
+	echo 'SELECT starttime FROM program ORDER BY starttime DESC LIMIT 1;'
+	)	|${MySQL}
+}
+UpdateEPG(){	#1: EPG file neve
+	echo "Betöltjük a mythTV-be..."
+	while [ -n "$1" ]; do
+		for source in $( seq 1 ${SOURCE_ID_MAX} ) ; do
+		    mythfilldatabase --loglevel err --only-update-guide --sourceid ${source} --file --xmlfile "$1"
+		done
+		shift
+	done
+}
+BackUp(){
+	echo Mentés az xmltv-ről tartaléknak...
+	[ ! -e $BACKUP_DIR ] && mkdir -p $BACKUP_DIR
+	while [ -n "$1" ]; do
+		cp $1 ${BACKUP_DIR}/$( date "+%Y-%m-%d-%H_$( basename $1 )" )
+		shift
+	done
+	cnt=0;
+	ls $BACKUP_DIR |sort -r |while read fn; do
+		cnt=$[${cnt}+1];
+		[ ${cnt} -lt $BACKUP_FILE_MAX ] && continue
+		echo $cnt---$fn
+		rm ${BACKUP_DIR}/$fn
+	done
+}
+
+Grab_(){		## $1: grabber program; $2: Ennyi napot szedjen le; $3: Ebbe a file-ba kell a végeredmény
+	echo "Letöltöm a(z) $1-val $3 helyre..."
+	$1 --days $2 --output $3.1 	>/dev/null 2>&1
+	E_from=$( grep "encoding=" $3.1 |sed 's|^.*encoding=\"||; s|\".*$||' )
+	iconv --from-code=$E_from --to-code=UTF-8 $3.1 |sed "s|$E_from|UTF-8|; s|\(<\/title>\)|\1\n\t<desc>A $1-val a port.hu-ról<\/desc>|" 	>$3
+	[ -e $3.1 ] && rm $3.1
+}
+
+
+#:::::::: Start :::::::::::::::
+    date
+	Grab_ tv_grab_huro $GRAB_DAYS $XML
+	UpdateEPG $XML
+	BackUp $XML
+	DB_Takaritas
+    date

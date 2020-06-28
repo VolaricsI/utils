@@ -1,0 +1,9 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+sed -i "s|%I:%M %p|%H:%M %p|g" /usr/share/mythtv/mythweb/modules/_shared/lang/Hungarian.lang

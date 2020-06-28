@@ -1,0 +1,27 @@
+#!/bin/bash
+#	Created by Volarics Istvan (Voli)
+
+#:::::: Fix beallitasok :::::::
+URL=http://localhost/mythweb/status
+PARAMETEREK=/etc/mythtv/$( basename $0 ).env
+
+#:::::: Beallitasok :::::::::::
+[ -n "$PARAMETEREK" ] && [ -e $PARAMETEREK ] && . $PARAMETEREK
+
+#:::::::: Start :::::::::::::::
+
+    Result=$( curl -s $CURL_PARAM $URL |grep -e "Encoder .* DVB" )
+    if [ $? -ne 0 ]; then
+	echo "Sikertelen az oldal lekérés ($URL), ezért nincs újraindítás."
+	exit 1
+    fi
+
+    echo "$Result" |grep -c -e " and is recording " >/dev/null
+    if [ $? -eq 0 ]; then
+	echo "Felvétel folyamatban, ezért nincs újraindítás."
+	echo "$Result"
+	exit 2
+    fi
+
+    echo "Újraindítás megkezdve..."
+    time systemctl restart mythtv-backend.service

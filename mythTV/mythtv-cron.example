@@ -1,0 +1,3 @@
+### MythTV
+11 03 * * *		mythtv		/etc/mythtv/mythTV-EPG
+22 04 * * *		mythtv		/etc/mythtv/mythTV-restart
