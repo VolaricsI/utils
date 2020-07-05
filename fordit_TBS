@@ -74,7 +74,7 @@ VerzioCsere(){			## $1: A verzió, pl.: '5.4.0-38-generic'
 }
 Verzio(){
     if [ -z $1 ]; then echo "Nincs megadva a verzió amire fordítsak"; 			exit 1; fi
-    if [ ! -e /lib/modules/$1 ]; then 	echo "Nincs ilyen ($1) kernel verzió..."; 	exit 2; fi
+    if [ ! -e /lib/modules/$1 ]; then echo "Nincs ilyen ($1) kernel verzió..."; 	exit 2; fi
 
     DIR=$DIR/$1
     [ ! -e ${DIR} ] && mkdir ${DIR}
@@ -83,6 +83,7 @@ Verzio(){
     VerzioCsere $1
     Forditas
     Install
+    [ -e /lib/modules/$1/vdso/.build-id ] && rm -rf /lib/modules/$1/vdso/.build-id 		## Töröljük a fordítás melléktermékét
     Dir_restore
 }
 
