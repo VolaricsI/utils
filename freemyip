@@ -7,24 +7,21 @@ Curl="/usr/bin/curl --insecure --silent --connect-timeout 10 " 		## A curl és p
 #:::::: Beallitasok :::::::::::
 [ -n "$1" ] && Domain=$1.freemyip.com 					## Másoljuk a megfelelő helyre a paramétereket
 [ -n "$2" ] && Token=$2
-[ -n "$3" ] && Beszedes="&verbose=true"
+[ -n "$3" ] && Csendes=1
 
-Url="https://freemyip.com/update?token=${Token}&domain=${Domain}"
-#Url="https://freemyip.com/update?token=${Token}&domain=${Domain}&verbose=yes" 	## A teljes URL; a Domain nem kell feltétlen neki
+Url="https://freemyip.com/update?token=${Token}&domain=${Domain}&verbose=yes" 	## A teljes URL; a Domain nem kell feltétlen neki
 #:::::: Fuggvenyek ::::::::::::
 
 #:::::::: Start :::::::::::::::
 if [ -z "$2" ]; then 						## Help
-    echo "usage: $0 DomainNeve Token [bármi ha beszédes kimenetet akarsz]"
+    echo "usage: $0 DomainNeve Token [bármi ha csendes kimenetet akarsz]"
     exit 1
 fi
 
-    Result=$( ${Curl} "${Url}${Beszedes}" ); Ret=$?
-    case  $Ret in
-	0|6|7|28) 						## Minden OK; Couldn't resolve host.; Failed to connect to host.; Time out
-		return 0
-	;;
-        *)
-		echo "===== $Ret =====>\n $Result\n<====" 	## Hiba esetén írja ki a választ is
-	;;
-    esac
+    if [ -z "$Csendes" ]; then 				## Ha nincs csendes üzem, akkor mindent a kimenetre
+	${Curl} "${Url}"
+	exit $?
+    else
+	${Curl} "${Url}" |grep -v -e '^OK$' -e '^IP .\+ didn.t change. No need to update record.$'
+    fi
+
