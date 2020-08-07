@@ -5,7 +5,7 @@
 Curl="/usr/bin/curl --insecure --silent --connect-timeout 10 " 		## A curl és paraméterezése
 
 #:::::: Beallitasok :::::::::::
-[ -n "$1" ] && Domain=$1 						## Másoljuk a megfelelő helyre a paramétereket
+[ -n "$1" ] && Domain=$1.freemyip.com 					## Másoljuk a megfelelő helyre a paramétereket
 [ -n "$2" ] && Token=$2
 [ -n "$3" ] && Beszedes="&verbose=true"
 
