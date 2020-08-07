@@ -9,7 +9,7 @@ CEL=/usr/local/bin 		## Legyen benne a PATH-ban
 Set(){
 	while [ ".$1" != "." ]; do
 	fname=$( readlink -f $1 )
-##	echo "${CEL}/$1 ==> 	${fname}"
+	echo "${CEL}/$1 ==> 	${fname}"
 		[   -L ${CEL}/$1 ] && rm ${CEL}/$1
 		[   -e ${CEL}/$1 ] && echo "Létezik a file: ${CEL}/$1"
 		[ ! -e ${CEL}/$1 ] && ln -s ${fname} ${CEL}/$1
@@ -25,7 +25,7 @@ Set(){
 
     ## Fejlesztés alatt: duv ssh-arhiv
 
-    Set ver Srt tarx Speed duckdns swap update 		\
+    Set ver Srt tarx Speed duckdns freemyip swap update \
 	dfv psv psxv tailv dpkgl fail2banv rkhunterv 	\
 	lcv logcheck-util 				\
 	zfs_snapper btrfs_snapper 			\
