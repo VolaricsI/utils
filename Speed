@@ -22,20 +22,17 @@ Freq_Max=$( cat ${DIR}/cpuinfo_max_freq |sort -r |grep -m 1 "." |sed 's/000$//' 
 	done
     fi
 
-    CPU_Type=$(  cat /proc/cpuinfo |grep -c "vendor_id" )		## Ha nem nulla akkor intel
-
     Tomb=$( ls $DIR/affected_cpus |grep -c "." )
+    CPU_Type=$(  cat /proc/cpuinfo |grep -c "vendor_id" )		## Ha nem nulla akkor intel
     if [ $CPU_Type != 0 ] ; then
 	Core=$( cat /proc/cpuinfo |grep "^cpu cores" |sort -u|sed 's/.*://g; ' )
 	Szal=$( cat /proc/cpuinfo |grep "^siblings"  |sort -u|sed 's/.*://g; ' )
-	echo "CPU magok: $Core, szálak: $Szal , tömb(ök): $Tomb."
+	echo "CPU magok: $Core, szálak: $Szal, $Tomb tömbe szervezve."
     else
 	Core=$(  cat /proc/cpuinfo |grep -c -e "processor" )
 	Tipus=$( cat /proc/cpuinfo |sort -u |grep -c -e "CPU variant" )
-	echo "CPU magok: $Core, tipussal: $Tipus , tömb(ök): $Tomb."
+	echo "CPU magok: $Core, tipusuk: $Tipus féle, $Tomb tömbe szervezve."
     fi
-
-    echo "/////////${Freq_Max}///////////"
 
     echo "CPU frekvencia, min: $Freq_Min Mhz max: $Freq_Max  MHz."
     echo -n "Lehetseges CPU frekvencia management(ek): "; cat ${DIR}/scaling_available_governors |sort -u 	#Így mindegyiket csak 1-szer írja ki
@@ -45,7 +42,7 @@ Freq_Max=$( cat ${DIR}/cpuinfo_max_freq |sort -r |grep -m 1 "." |sed 's/000$//' 
     while true; do
 	echo -ne "\r\n${cnt}: "
 	for x in ${DIR}/scaling_cur_freq ; do
-	    s=$[$( cat $x )/1000]
+	    s=$( cat $x |sed 's/000$//' )
 	    if [ $s -le ${Freq_Min} ]; then
 		echo -ne "\t....."
 	    elif [ $s -lt 1000 ]; then
