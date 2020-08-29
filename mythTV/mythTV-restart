@@ -23,5 +23,5 @@ PARAMETEREK=/etc/mythtv/$( basename $0 ).env
 	exit 2
     fi
 
-    echo "Újraindítás megkezdve..."
-    time systemctl restart mythtv-backend.service
+#    echo "Újraindítás megkezdve..."
+    systemctl restart mythtv-backend.service
