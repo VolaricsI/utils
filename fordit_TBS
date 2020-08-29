@@ -4,7 +4,7 @@
 ## Az okosságom forrása: https://www.tbsiptv.com/index.php?route=product/download/drivers&path=download/tbs6590/tbs6590_multi_standard_dual_tuner_dual_ci_pcie_card_data_sheet.pdf&id=39
 
 #:::::: Fix beallitasok :::::::
-MAKE_PARAM=" -j 4 "		#Több szálu forditas
+#MAKE_PARAM=" -j 4 "		#Több szálu forditas
 
 #:::::: Beallitasok :::::::::::
 DIR=/usr/src/tbsdriver
@@ -15,14 +15,14 @@ FW_URL="http://www.tbsdtv.com/download/document/linux/"
 FW_FILE="tbs-tuner-firmwares_v1.0.tar.bz2"
 
 #:::::: Fuggvenyek ::::::::::::
-Dir_save(){
-	SavePath=$( pwd )
-	[ ! -e $DIR ] && mkdir -p $DIR ; 	[ $? -ne 0 ] && exit 1
-	cd $DIR ; 				[ $? -ne 0 ] && exit 2
-}
-Dir_restore(){
-	cd $SavePath
-}
+#Dir_save(){
+#	SavePath=$( pwd )
+#	[ ! -e $DIR ] && mkdir -p $DIR ; 	[ $? -ne 0 ] && exit 1
+#	cd $DIR ; 				[ $? -ne 0 ] && exit 2
+#}
+#Dir_restore(){
+#	cd $SavePath
+#}
 
 Letoltes(){
     echo "Mindent törlök, majd letöltöm a forrásokat..."
@@ -30,7 +30,7 @@ Letoltes(){
     rm -rf ./media ./media_build ${FILE_FIND} ${FILE_CSERE} 	2>&1 1>/dev/null
     git clone https://github.com/tbsdtv/media_build.git ; 				[ $? -ne 0 ] && exit 2
     git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media ; 	[ $? -ne 0 ] && exit 3
-    rm -rf ./media/.git ./media_build/.git
+#    rm -rf ./media/.git ./media_build/.git
 }
 Forditas(){
     echo "És akkor a fordítás..."
@@ -44,7 +44,6 @@ Install(){
     cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
     sudo make install ; 	[ $? -ne 0 ] && exit 11
 }
-
 VerzioCsere(){			## $1: A verzió, pl.: '5.4.0-38-generic'
     cd $DIR ; 	[ $? -ne 0 ] && exit 1
     find . |grep -v "/Documentation/" |sort |while read fn; do
@@ -87,6 +86,28 @@ Verzio(){
     Dir_restore
 }
 
+do_CsakLetoltes(){
+    [ ! -e ${DIR} ] && mkdir ${DIR}
+    Letoltes
+}
+do_CsakVerzioCsere(){
+    if [ -z $1 ]; then echo "Nincs megadva a verzió amire fordítsak"; 			exit 1; fi
+    if [ ! -e /lib/modules/$1 ]; then echo "Nincs ilyen ($1) kernel verzió..."; 	exit 2; fi
+
+    [ ! -e ${DIR} ] && mkdir ${DIR}
+    VerzioCsere $1
+}
+do_CsakFordit(){
+    [ ! -e ${DIR} ] && exit 1
+    echo "És akkor a fordítás..."
+    cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
+    make dir DIR=../media ; 	[ $? -ne 0 ] && exit 2
+    make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 3
+}
+do_CsakInstall(){
+    Install
+}
+
 do_teszt(){
 	dmesg |grep -e si2183 -e si2157 -e frontend
 	dmesg |grep TBS |sed 's/.*\]//'|sort -u
@@ -95,6 +116,7 @@ do_Delete(){
     ls  $DIR|while read fn; do
 	rm -rf $DIR/$fn
     done
+    ls -lh /usr/src/tbsdriver/
 }
 do_Firmware(){
     Dir_save
@@ -124,6 +146,18 @@ do_Verzio(){
 
 #:::::::: Start :::::::::::::::
 case "$1" in
+	cl|CL)
+	    do_CsakLetoltes
+	;;
+	cv|CV)
+	    do_CsakVerzioCsere $2
+	;;
+	cf|CF)
+	    do_CsakFordit
+	;;
+	ci|CI)
+	    do_CsakInstall
+	;;
 	t|T)
 	    do_teszt
 	;;
@@ -141,6 +175,10 @@ case "$1" in
 	;;
       *)
 	    echo "Usage: $0 t|w|f|v|d [a konkrét verzió]"
+	    echo "	Csak letöltés:	(cl) Csak letölti a forrásokat."
+	    echo "	Csak verzio:	(cv) Csak a verziót cseréli le."
+	    echo "	Csak fordít:	(cf) Csak a fordítás."
+	    echo "	Csak telepít:	(ci) Csak a telepítés."
 	    echo "	(T)eszt: 	Kernel logot iratki a TBS-ről."
 	    echo "	(D)elete: 	Letörli a rorrásokat és fordításokat."
 	    echo "	(F)ull: 	Az aktuális kernelhez, letölti a netről, fordítja, és telepíti."
