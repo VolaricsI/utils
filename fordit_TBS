@@ -20,7 +20,7 @@ Dir_save(){
 	[ ! -e $DIR ] && mkdir -p $DIR ; 	[ $? -ne 0 ] && exit 1
 	cd $DIR ; 				[ $? -ne 0 ] && exit 2
 }
-Dir_restore(){ cd $SavePath }
+Dir_restore(){ cd $SavePath ; }
 
 Letoltes(){
     echo "Mindent törlök, majd letöltöm a forrásokat..."
@@ -159,7 +159,7 @@ case "$1" in
 	t|T)
 	    do_teszt
 	;;
-	d|d)
+	d|D)
 	    do_Delete
 	;;
 	w|W)
