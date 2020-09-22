@@ -43,7 +43,7 @@ Update(){ 							## A hibakezelés miatt került fügvénybe
 
     [ -z "${Dev}" ] && exit 0 				## Nem kell IPv6
 
-	Ipv6=$( ip -6 address show scope global dev ${Dev} |grep 'inet6.*2a01:' |sed 's/.*inet6 *//g; s/\/.*//g;' )
+	Ipv6=$( ip -6 address show scope global dev ${Dev} |grep 'inet6' |grep -v 'inet6 f...:' |sed 's/.*inet6 *//g; s/\/.*//g;' )
 
     [ -z "${Ipv6}" ] && exit 0 				## Nincs IPv6-os cím
 
