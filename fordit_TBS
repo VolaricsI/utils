@@ -17,7 +17,7 @@ FW_FILE="tbs-tuner-firmwares_v1.0.tar.bz2"
 #:::::: Fuggvenyek ::::::::::::
 Dir_save(){
 	SavePath=$( pwd )
-	[ ! -e $DIR ] && mkdir -p $DIR ; 	[ $? -ne 0 ] && exit 1
+	[ -e $DIR ] || mkdir -p $DIR ; 		[ $? -ne 0 ] && exit 1
 	cd $DIR ; 				[ $? -ne 0 ] && exit 2
 }
 Dir_restore(){ cd $SavePath ; }
@@ -26,15 +26,15 @@ Letoltes(){
     echo "Mindent törlök, majd letöltöm a forrásokat..."
     cd $DIR ; 										[ $? -ne 0 ] && exit 1
     rm -rf ./media ./media_build ${FILE_FIND} ${FILE_CSERE} 	2>&1 1>/dev/null
-    git clone https://github.com/tbsdtv/media_build.git ; 				[ $? -ne 0 ] && exit 2
+    git clone           https://github.com/tbsdtv/media_build.git ; 			[ $? -ne 0 ] && exit 2
     git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media ; 	[ $? -ne 0 ] && exit 3
-#    rm -rf ./media/.git ./media_build/.git
+    rm -rf ./media/.git ./media_build/.git
 }
 Forditas(){
     echo "És akkor a fordítás..."
     cd $DIR/media_build ; 	[ $? -ne 0 ] && exit 1
     make dir DIR=../media ; 	[ $? -ne 0 ] && exit 2
-    make distclean ; 		[ $? -ne 0 ] && exit 3
+    make allyesconfig ; 	[ $? -ne 0 ] && exit 3
     make $MAKE_PARAM ; 		[ $? -ne 0 ] && exit 4
 }
 Install(){
