@@ -42,7 +42,7 @@ Freq_Max=$( cat ${DIR}/cpuinfo_max_freq |sort -r |grep -m 1 "." |sed 's/000$//' 
     while true; do
 	echo -ne "\r\n${cnt}: "
 	for x in ${DIR}/scaling_cur_freq ; do
-	    s=$( cat $x |sed 's/000$//' )
+	    s=$( cat $x |sed 's/[0-9]\{3\}$//' ) 		## Így már MHz-ben vagyunk
 	    if [ $s -le ${Freq_Min} ]; then
 		echo -ne "\t....."
 	    elif [ $s -lt 1000 ]; then
