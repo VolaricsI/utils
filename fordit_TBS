@@ -28,7 +28,10 @@ Letoltes(){
     rm -rf ./media ./media_build ${FILE_FIND} ${FILE_CSERE} 	2>&1 1>/dev/null
     git clone           https://github.com/tbsdtv/media_build.git ; 			[ $? -ne 0 ] && exit 2
     git clone --depth=1 https://github.com/tbsdtv/linux_media.git -b latest ./media ; 	[ $? -ne 0 ] && exit 3
-    rm -rf ./media/.git ./media_build/.git
+		## Legyen meg a lefordítottnak a verziója
+    cd media_build ; 	git log >../media_build.log ; 	cd ..
+    cd media ;		git log >../media.log ; 	cd ..
+#    rm -rf ./media/.git ./media_build/.git
 }
 Forditas(){
     echo "És akkor a fordítás..."
