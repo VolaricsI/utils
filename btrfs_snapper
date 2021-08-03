@@ -11,18 +11,18 @@ MODE=$2							## Milyen pillanatképet készítünk
 DEV_Neve=${DEV//\//.} 					## Ha át akarod írni bash-ról sh-ra: $( echo ${DEV}|sed 's/\//./g' )
 DIR="/mnt/${DEV_Neve}" 					## Ide történik a felcsatolás
 
-Felszamolas(){ 														## Felszámolom a környezetet
+Felszamolas(){ 										## Felszámolom a környezetet
 	umount ${DIR}; mountpoint -q ${DIR} ; Ret=$?
 	  if [ $Ret -ne 0 ] ; then
 		rmdir  ${DIR}
 	else
-		echo "A csatolás még létezik!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 	>>${LOG_FILE}
+		echo "A csatolás még létezik!!!!!!!!" 	>>${LOG_FILE}
 	fi
 }
 
 Szinkronizal(){
-	btrfs subvolume sync ${DIR} 			>>${LogFile}							## A változásokat kiszinkronizálom
-	date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}							## Itt a vége
+	btrfs subvolume sync ${DIR} 			>>${LogFile}			## A változásokat kiszinkronizálom
+	date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}			## Itt a vége
 }
 
 case ${MODE} in
@@ -36,12 +36,16 @@ case ${MODE} in
 	    ;;
 	(havi) 	Count=$( date +%m )
 	    ;;
-	(*) 	echo "Usage: $0 DEV [oras(24)|heti(7)|hetes(52)|napi(31)|havi(12)]"
+	(*) 	echo "Usage: $0 [DEV|UUID=XXX-..XX] [oras(24)|heti(7)|hetes(52)|napi(31)|havi(12)]"
 		exit 1
 	    ;;
 esac
 
 #:::::::: Start :::::::::::::::
+	Drive=$( blkid |sed 's|"||g' |grep -e ":.*$1" |sed 's|:.*||' ) 			## Ha UUID van megadva akkor kikeresem a DEV nevet
+	[ -n "$Drive" ] && exec $(readlink --no-newline -f $0) $Drive $2 		## és azzal hívom meg magamat
+
+
 	StartTime=$( date +%s )								## Kell a futási idő számításhoz
 
 	if [ ! -e ${DEV} ]; then echo "Nem létező device: ${DEV}..."; exit 1; fi
