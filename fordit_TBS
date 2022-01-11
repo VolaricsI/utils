@@ -139,7 +139,12 @@ do_Verzio(){
 	echo "úgy ahogy azt az 'uname -r' írja ki. pl: '5.4.0-38-generic'."
 	echo ""
 	echo " A lehetséges verziók listája:"
-	ls  /boot|grep vmlinuz |sed 's/^vmlinuz-/\t/'
+	ls  /boot|grep vmlinuz |sed 's/^vmlinuz-//' |while read a; do
+	    echo -n "	$a "
+		ls $DIR |grep -q "$a"
+		[ $? -eq 0 ] && echo -n "	van"
+	    echo ""
+	done
 	exit 1
     fi
     Verzio $1
