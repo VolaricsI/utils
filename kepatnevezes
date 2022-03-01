@@ -7,32 +7,22 @@
 #:::::: Ellenorzesek ::::::::::
 #:::::: functions :::::::::::::
 Hash_torol(){
-ls  Screenshot_*.jpg	|sort	|while read a; do
+ls  Screenshot_*.jpg	2>/dev/null |sort	|while read a; do
 				#Screenshot_2022-02-11-12-48-30-42.jpg
 	b=$( echo "$a" |sed 's|_[0-9a-f]*\.jpg|.jpg|g; ' )
 	if [ "$a" = "$b" ]; 	then continue; fi
-	if [ -e "$b" ]; 	then continue; fi
-	echo "$a ===> $b"
-	mv "$a" "$b"
-done
-}
-
-Hash_TimeKod(){
-ls  Screenshot_*.jpg	|sort	|while read a; do
-				#Screenshot_2022-02-11-12-48-30-42.jpg
-	b=$( echo "$a" |sed 's|\(Screenshot_[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)-\([0-9]\{2\}-[0-9]\{2\}\)-\([0-9]\{2\}\)-|\1_\2_\3|; ' )
-	if [ "$a" = "$b" ]; 	then continue; fi
-	if [ -e "$b" ]; 	then continue; fi
-	echo "$a ===> $b"
-	mv "$a" "$b"
+	c=$( echo "$b" |sed 's|\(Screenshot_[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)-\([0-9]\{2\}-[0-9]\{2\}\)-\([0-9]\{2\}\)-|\1_\2-\3|' )
+	if [ "$a" = "$c" ]; 	then continue; fi
+	if [ -e "$c" ]; 	then continue; fi
+	echo "$a ===> $c"
+	mv "$a" "$c"
 done
 }
 
 IMG(){
-ls  IMG*.jpg	|sort	|while read a; do
+ls  IMG*.jpg	2>/dev/null |sort	|while read a; do
 				#IMG_20210202_115744.jpg
 	b=$( echo "$a" |sed 's|IMG_*\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)|IMG_\1-\2-\3|; ' )
-#	echo "$a ===> $b"
 	if [ "$a" = "$b" ]; 	then continue; fi
 	if [ -e "$b" ]; 	then continue; fi
 	echo "$a ===> $b"
@@ -44,9 +34,4 @@ done
 
 #Screenshot_2022-02-11-12-48-30-42_bd54b661362b80c5a7eecc75e487a121.jpg
 	Hash_torol
-	Hash_TimeKod
 	IMG
-
-
-
-echo ......; read a; exit 0
