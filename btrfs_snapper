@@ -66,27 +66,26 @@ esac
 	LogFile="${CurDir}/${Count}.log"							## Ide fogok Naplózni
 	date "${LOG_FORMAT} Kezdés" 			>${LogFile}				## Most kezdek
 
-	for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" ) ; do			## A régi mind törölve
-		btrfs subvolume delete ${CurDir}/${dir}
+	find $CurDir -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" |while read dir; do				## A régi mind törölve
+		btrfs subvolume delete "$CurDir/$dir"
 	done 						>>${LogFile}
 	date "${LOG_FORMAT} Törlések vége" 		>>${LogFile}
 
-	Vols=$( btrfs subvolume list ${DIR}| grep -v ${SNAP_DIR} | cut -d ' ' -f9  ) 					## Minden subvol-ról mentés
-	for Vol in ${Vols} ; do
+	btrfs subvolume list $DIR| grep -v $SNAP_DIR |sed 's|.*path||' |while read Vol; do 				## Minden subvol-ról mentés
 		Vold=${Vol//\//.}
-		btrfs subvolume snapshot -r ${DIR}/${Vol} ${CurDir}/${Count}-${Vold}
+		btrfs subvolume snapshot -r "$DIR/$Vol" "$CurDir/${Count}-${Vold}"
 	done 						>>${LogFile}
 	date "${LOG_FORMAT} --> snapshot készítés kész" >>${LogFile}
 
 	eval NemKell='$'NEMKELL_${MODE} 										## A kivételeket letörlöm mert nem kellenek...
 	for kimarad in ${NemKell} ${NEMKELL} ; do
-		[ -d ${CurDir}/${Count}-${kimarad} ] && btrfs subvolume delete ${CurDir}/${Count}-${kimarad}
+		[ -d $CurDir/${Count}-${kimarad} ] && btrfs subvolume delete "$CurDir/${Count}-${kimarad}"
 	done 						>>${LogFile}
 
 	eval NemKell='$'NEMKELL_${MODE}_kezd 										## Így kezdődő snapshot-okat is törlöm
 	for kimarad in ${NemKell} ${NEMKELL_kezd}; do
-		for dir in $( find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" ) ; do
-			btrfs subvolume delete ${CurDir}/$dir
+		find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" |while read dir; do
+			btrfs subvolume delete "$CurDir/$dir"
 		done
 	done 						>>${LogFile}
 	date "${LOG_FORMAT} Ami nem kell az törölve" 	>>${LogFile}
