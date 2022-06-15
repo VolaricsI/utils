@@ -1,4 +1,4 @@
 #!/bin/sh
 #	Created by Volarics Istvan by Voli
 
-df -h -x tmpfs -x devtmpfs -x squashfs
+df -h -T -x tmpfs -x devtmpfs -x squashfs
