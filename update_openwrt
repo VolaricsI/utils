@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+#	Create by Voli (volaricsi@volarics.hu)
+
+#:::::: Fix beallitasok :::::::
+Error=/tmp/$(basename $0).error
+RETRY_COUNT=1
+#:::::: Beallitasok :::::::::::
+#:::::: Ellenorzesek ::::::::::
+#:::::: functions :::::::::::::
+#:::::: Start :::::::::::::::::
+
+    Ret=23; cnt=0
+    while [ $Ret -ne 0 -a $cnt -le $RETRY_COUNT ]; do
+	opkg update >/dev/null
+	Ret=$?;
+	cnt=$[$cnt+1]
+    done
+    if [ $Ret -ne 0 ]; then
+	echo "Sikertelen letöltés..."
+	exit 1
+    fi
+    opkg list-upgradable
