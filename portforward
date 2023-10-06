@@ -1,0 +1,9 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+	ssh -v -p122  tu20-volarics.freemyip.com  -L 8080:192.168.23.1:80
