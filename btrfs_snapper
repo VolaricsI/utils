@@ -13,16 +13,17 @@ DIR="/mnt/${DEV_Neve}" 					## Ide történik a felcsatolás
 
 Felszamolas(){ 										## Felszámolom a környezetet
 	umount ${DIR}; mountpoint -q ${DIR} ; Ret=$?
-	  if [ $Ret -ne 0 ] ; then
+	if [ $Ret -ne 0 ] ; then
 		rmdir  ${DIR}
 	else
 		echo "A csatolás még létezik!!!!!!!!" 	>>${LOG_FILE}
 	fi
 }
 
-Szinkronizal(){
-	btrfs subvolume sync ${DIR} 			>>${LogFile}			## A változásokat kiszinkronizálom
-	date "${LOG_FORMAT} subvolsync vége" 		>>${LogFile}			## Itt a vége
+DelSubVol(){
+	btrfs subvolume delete -c "$1/$2"
+	[ -n "$BTRFS_STEPSYNC" ] && ( btrfs subvolume sync "$1"; )
+##	[ -n "$BTRFS_STEPSYNC" ] && ( btrfs subvolume sync "$1"; sleep 60 )
 }
 
 case ${MODE} in
@@ -66,12 +67,20 @@ esac
 	LogFile="${CurDir}/${Count}.log"							## Ide fogok Naplózni
 	date "${LOG_FORMAT} Kezdés" 			>${LogFile}				## Most kezdek
 
+	btrfs subvolume sync ${DIR} 								## Mielött kezdek legyen egy tiszta állapot
+#	[ -z "$BTRFS_NOSYNC" ] && btrfs subvolume sync ${DIR}
+
 	find $CurDir -maxdepth 1 -type d -printf "%f\n" |grep "^${Count}-" |while read dir; do				## A régi mind törölve
-		btrfs subvolume delete "$CurDir/$dir"
+		DelSubVol "$CurDir" "$dir"
 	done 						>>${LogFile}
-	date "${LOG_FORMAT} Törlések vége" 		>>${LogFile}
+	date "${LOG_FORMAT} Régiek törlése kész" 	>>${LogFile}
 
 	btrfs subvolume list $DIR| grep -v $SNAP_DIR |sed 's|.*path||' |while read Vol; do 				## Minden subvol-ról mentés
+		echo "$BTRFS_NO_SNAPSHOT" |grep -e ";$Vol;" >/dev/null							## Amit explicit megadtak arról nem készül mentés
+		if [ $? -eq 0 ]; then
+		    echo "Nem készül snapshot: $Vol."
+		    continue
+		fi
 		Vold=${Vol//\//.}
 		btrfs subvolume snapshot -r "$DIR/$Vol" "$CurDir/${Count}-${Vold}"
 	done 						>>${LogFile}
@@ -79,21 +88,22 @@ esac
 
 	eval NemKell='$'NEMKELL_${MODE} 										## A kivételeket letörlöm mert nem kellenek...
 	for kimarad in ${NemKell} ${NEMKELL} ; do
-		[ -d $CurDir/${Count}-${kimarad} ] && btrfs subvolume delete "$CurDir/${Count}-${kimarad}"
+		[ -d $CurDir/${Count}-${kimarad} ] && DelSubVol "$CurDir" "${Count}-${kimarad}"
 	done 						>>${LogFile}
 
 	eval NemKell='$'NEMKELL_${MODE}_kezd 										## Így kezdődő snapshot-okat is törlöm
 	for kimarad in ${NemKell} ${NEMKELL_kezd}; do
 		find ${CurDir} -maxdepth 1 -type d -printf "%f\n" |grep "${Count}-${kimarad}" |while read dir; do
-			btrfs subvolume delete "$CurDir/$dir"
+			DelSubVol "$CurDir" "$dir"
 		done
 	done 						>>${LogFile}
 	date "${LOG_FORMAT} Ami nem kell az törölve" 	>>${LogFile}
 
-	if [ -n "${BTRFS_NOSYNC}" ]; then										## Most elmarad a szinkronizálás
+	if [ -n "$BTRFS_NOSYNC" ]; then											## Most elmarad a szinkronizálás
 	    date "${LOG_FORMAT} Nincs kényszerített szinkronizálás" 		>>${LogFile}
 	else
-	    Szinkronizal
+	    btrfs subvolume sync "$CurDir" 					>>${LogFile}				## A változásokat kiszinkronizálom
+	    date "${LOG_FORMAT} végső sync kész" 				>>${LogFile}				## Itt a vége
 	fi
 
 	RunTime=$[ $( date +%s ) - ${StartTime} ] 									## Ennyi ideig dolgoztam
@@ -102,7 +112,7 @@ esac
 
 	Felszamolas
 
-	[ ".$BTRFS_SNAP_time" != "." ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 							## Csak tesztelés idejére
-	[ ".$BTRFS_SNAP_log"  != "." ] && date "+%Y.%m.%d. %H:%M:%S ==> ${DEV}(${MODE}): 	${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
+	[ -n "$BTRFS_SNAP_time" ] && echo "Futási idő (${DEV}) : ${RunTime} sec." 						## Csak tesztelés idejére
+	[ -n "$BTRFS_SNAP_log"  ] && date "+%Y.%m.%d. %H:%M:%S ==> ${DEV}(${MODE}): 	${RunTime} sec." >>${LOG_FILE}		## Nappló a későbbre
 
 exit 0
