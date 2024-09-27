@@ -1,0 +1,67 @@
+#!/bin/bash
+#	Created by Volarics Istvan (Voli)
+
+#:::::: Fix beallitasok :::::::
+XML=/tmp/EPG_huro.xml					## Itt van az EPG
+
+ICON_DIR=/home/mythtv/.mythtv/channels
+ICON_ELOTAG="Voli-"
+
+Csat_ID="<channel id=\""
+Csat_Ic="<icon src=\""
+Csat_veg="</channel>"
+List=$XML.1
+#:::::: Beallitasok :::::::::::
+
+MYTH_CONFIGDB=/etc/mythtv/config.xml 					## MythTV DB hozzáférésének adatai
+DBPassword=$( grep -e "Password" ${MYTH_CONFIGDB} |sed 's/<\/.*>//g; s/<.*>//g; s/^ \+//g;' )
+MySQL="mysql -h localhost -D mythconverg -u mythtv  -p${DBPassword}" 	## Ezzel kezeljük az adatbázist.
+
+#:::::: Fuggvenyek ::::::::::::
+DB_Takaritas(){
+	echo "Adatbázis takarítás... Az utolso film kezdési idő..."
+	(
+		## Az EIT cache törlése
+	echo 'TRUNCATE TABLE eit_cache;'
+
+		## A web coocke törlése, az 1 hónál régebbi már valseg nem kell
+	echo "delete FROM mythweb_sessions  WHERE modified < now() - interval 1 month " 	|${MySQL}
+
+		## A Régebbi EPG bejegyzések tölése
+	echo "DELETE  FROM \`program\` WHERE \`starttime\` <= DATE_SUB( now(), INTERVAL ${EPG_ELOZO_NAPOK} DAY);"
+	echo 'SELECT starttime FROM program ORDER BY starttime DESC LIMIT 1;'
+	)	|${MySQL}
+}
+
+#:::::::: Start :::::::::::::::
+	echo ${MySQL}--------------
+
+(
+	echo "UPDATE channel SET icon =\"11111111\" WHERE \`xmltvid\` = \"312.port.hu\" ; "
+	echo "SELECT xmltvid, icon  FROM \`channel\` WHERE \`xmltvid\` = \"312.port.hu\" LIMIT 20; ;"
+	)|$MySQL
+
+	echo ///$?---
+
+#echo ....; read a; exit 0
+
+    grep -e "$Csat_ID" -e "$Csat_Ic" -e "$Csat_veg"  $XML |while read line; do
+	echo $line |grep -e "$Csat_ID" >/dev/null; [ $? -ne 0 ] && continue
+	read icon ; 	[ $? -ne 0 ] && continue ; echo $icon    |grep -e "$Csat_Ic"   >/dev/null ; [ $? -ne 0 ] && continue
+	read channel ;	[ $? -ne 0 ] && continue ; echo $channel |grep -e "$Csat_veg"  >/dev/null ; [ $? -ne 0 ] && continue
+
+	Nev=$( echo $line |sed "s|$Csat_ID||; s|\".*||" )
+	Cim=$( echo $icon |sed "s|$Csat_Ic||; s|\".*||" )
+#	echo "$Nev|$Cim"
+	echo $Cim |grep -e "^https://" ; [ $? -ne 0 ] && continue
+
+	curl --silent --output "$ICON_DIR/$ICON_ELOTAG$Nev.Jpg" $Cim
+	[ $? -ne 0 ] && continue
+
+	(
+	echo "UPDATE channel SET icon =\"$ICON_ELOTAG$Nev.Jpg\" WHERE \`xmltvid\` = \"$Nev\" ; "
+	echo "SELECT xmltvid, icon  FROM \`channel\` WHERE \`xmltvid\` = \"$Nev\"  ;"
+	)|$MySQL
+
+    done
+    chown -R mythtv:mythtv $ICON_DIR
