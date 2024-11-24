@@ -1,0 +1,6 @@
+#!/bin/sh
+#	Created by Volarics Istvan by Voli
+
+sudo apt update
+sudo apt upgrade --reinstall -y nvidia-dkms-470 nvidia-driver-470
+
