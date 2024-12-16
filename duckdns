@@ -2,6 +2,8 @@
 #	Created by Volarics Istvan by Voli
 
 #:::::: Fix beallitasok :::::::
+
+##BESZEDES=voli
 ##LEIRAS, BESZEDES 					## Exportból érkezik: A domain leírása és az hogy mennyire legyen beszédes ez a script
 #LEIRAS="Update:"$( date +%Y.%m.%d.%H:%M )			## a dig $DOMAIN.duckdns.org TXT megjeleníti ezt az infót. NEM lehet benne szóköz és vezérlő karakter!!!
 
@@ -19,11 +21,12 @@ fi
 [ -n $3 ] && Dev=$3
 [ ! -z ${BESZEDES} ] && Beszedes=${BESZEDES_URL} 		## Jellemzően teszteléshez kell a beszédes mód
 
-Url="https://www.duckdns.org/update?domains=${Domain}&token=${Token}${Beszedes}" 	## Minden url-nek ez az alapja
 
+Url="https://www.duckdns.org/update?domains=${Domain}&token=${Token}${Beszedes}" 	## Minden url-nek ez az alapja
 
 #:::::: Fuggvenyek ::::::::::::
 Update(){ 							## A hibakezelés miatt került fügvénybe
+## echo "${Curl} "${Url}$1""					## Debug miatt
     Result=$( ${Curl} "${Url}$1" )
     Ret=$?
     case  $Ret in
