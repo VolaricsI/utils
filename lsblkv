@@ -1,0 +1,9 @@
+#!/bin/bash
+#	Created by Volarics Istvan by Voli
+
+#:::::: Fix beallitasok :::::::
+#:::::: Beallitasok :::::::::::
+#:::::: Fuggvenyek ::::::::::::
+#:::::::: Start :::::::::::::::
+
+    lsblk -o NAME,SIZE,PARTLABEL,FSTYPE,LABEL
