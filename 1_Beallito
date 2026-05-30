@@ -30,5 +30,4 @@ Set(){
 	lcv logcheck-util lsblkv 			\
 	zfs_snapper btrfs_snapper 			\
 	network-online operavideo refreshclam 		\
-	torl torl1 TorrentCopy Defrag fordit_TBS 	\
-	kepatnevezes
+	Defrag fordit_TBS kepatnevezes

@@ -5,4 +5,11 @@
 #:::::: Beallitasok :::::::::::
 #:::::: Fuggvenyek ::::::::::::
 #:::::::: Start :::::::::::::::
-tail -f /var/log/syslog
+    if [ -e /var/log/syslog ] ; then  tail -f /var/log/syslog
+	exit 0
+    fi
+    
+    
+    if [ -e /var/log/messages ] ; then  tail -f /var/log/messages
+	exit 0
+    fi
